@@ -21,7 +21,7 @@ RUN echo "deb http://nginx.org/packages/debian/ wheezy nginx" | tee -a /etc/apt/
 #RUN chown -R redis:redis /etc/redis
 
 # HTTP & HTTP SSL Ports
-EXPOSE 80,443
+EXPOSE 80 443
 
 ENTRYPOINT ["/bin/bash"]
 
