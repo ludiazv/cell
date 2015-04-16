@@ -1,0 +1,11 @@
+/keys
+TODO.txt
+/mc_dev
+/cell/bussybox*
+/cell/debian_wheezy*
+/cassandra20/*.tar.gz
+/jre7/*.tar.gz
+/jre8/*.tar.gz
+/registry/test-data
+
+
