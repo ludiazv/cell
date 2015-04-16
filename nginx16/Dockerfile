@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND   noninteractive
 # Install dotdeb repository where redis 2.8 is located
 RUN echo "deb http://nginx.org/packages/debian/ wheezy nginx" | tee -a /etc/apt/sources.list.d/nginx.sources.list && \
     echo "deb-src http://nginx.org/packages/debian/ wheezy nginx" | tee -a /etc/apt/sources.list.d/nginx.sources.list && \
-	wget --quiet -O - http://nginx.org/keys/nginx_signing.key | apt-key add -|&& \
+	wget --quiet -O - http://nginx.org/keys/nginx_signing.key | apt-key add - && \
 	apt-get update -qy && apt-get install nginx -qy && mkdir -p /etc/redis && \
 	apt-get autoclean && apt-get clean && rm -rf /var/lib/apt/lists/* 
 

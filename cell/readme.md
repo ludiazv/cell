@@ -1,4 +1,4 @@
-=== AtloIdeas CELL image
+#AtloIdeas CELL image
 
 Description:
 
