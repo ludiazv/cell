@@ -1,0 +1,53 @@
+#cloud-config
+
+coreos:
+  etcd:
+    # generate a new token for each unique cluster from https://discovery.etcd.io/new
+    # WARNING: replace each time you 'vagrant destroy'
+    discovery: https://discovery.etcd.io/c24cf5b46a5435369551658e73e5b151
+    addr: $public_ipv4:4001
+    peer-addr: $public_ipv4:7001
+  fleet:
+    public-ip: $public_ipv4
+    metadata: "dc=one"
+  units:
+    - name: etcd.service
+      command: start
+    - name: fleet.service
+      command: start
+    - name: docker-tcp.socket
+      command: start
+      enable: true
+      content: |
+        [Unit]
+        Description=Docker Socket for the API
+
+        [Socket]
+        ListenStream=2375
+        Service=docker.service
+        BindIPv6Only=both
+
+        [Install]
+        WantedBy=sockets.target
+    - name: cell-metada.service
+	  command: start
+	  enable: true
+	  content: |
+	     [Unit]
+         Description=Atlo Ideas cell metada daemon
+         After=etcd.service
+         After=fleet.service
+         Requires=etcd.service
+         Requires=fleet.service
+		 
+		 [Service]
+         EnvironmentFile=/etc/environment
+         ExecStart=/bin/sh -c '\
+             etcdctl mkdir /cell/metadata 2> /dev/null ; \
+             etcdctl get /cell/metadata/${COREOS_PRIVATE_IPV4} 2> /dev/null ; \
+             if [ $? -ne 0 ]; then etcdctl set /cell/metadata/${COREOS_PRIVATE_IPV4} "dc=one" fi ; \
+			 etcdctl watch-exec 
+			 
+         '
+		 
+	  

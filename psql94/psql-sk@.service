@@ -1,0 +1,26 @@
+[Unit]
+Description=PostgreSQL 9.4 Service SideKick - instance %i
+# Requirements
+Requires=etcd.service
+Requires=psql@%i.service
+#Order & binding
+After=etcd.service
+After=psql@%i.service
+BindsTo=psql@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+ExecStart=/bin/sh -c 'WAIT=30 ; PREFIX="/" ; while true; do \
+				        sleep $WAIT ; \
+						ST=$(docker exec psql94-%i gosu postgres /opt/psqlbin/pg_ctl status) ; \ 
+						T=$(date -uIseconds) ; \
+						etcdctl set --ttl 80 ${PREFIX}psql/psql-%i-ip ${COREOS_PRIVATE_IPV4} > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}psql/psql-%i-port 5432 > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}psql/psql-%i-status "$ST $T" > /dev/null ; \
+	 				 	sleep $WAIT; done'
+ExecStop=/bin/sh -c ' PREFIX="/" ; \
+					  etcdctl rm ${PREFIX}psql/psql-%i-ip  ; etcdctl rm ${PREFIX}psql/redis-%i-port ; \
+					  etcdctl rm ${PREFIX}psql/psql-%i-status '
+
+[X-Fleet]
+MachineOf=psql@%i.service

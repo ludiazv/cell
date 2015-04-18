@@ -4,8 +4,8 @@ FROM debian:wheezy
 MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 ENV DEBIAN_FRONTEND   noninteractive
 
-# update and install basic tools if needed
-RUN apt-get update -qy && apt-get install -qy procps nano tar bzip2 wget net-tools adduser curl && apt-get autoclean && apt-get clean && rm -rf /var/lib/apt/lists/*
+# update and install basic tools if needed & create cell user+group
+RUN apt-get update -qy && apt-get install -qy procps nano tar bzip2 wget net-tools adduser curl && apt-get autoclean && apt-get clean && rm -rf /var/lib/apt/lists/* && groupadd -g 2015 cell && adduser  --uid 2015 --ingroup cell --shell /bin/bash --gecos "" --disabled-password cell
 
 # ADD CONFD binary and create condf directories
 ADD confd-0.8.0-linux-amd64 /usr/local/bin/confd

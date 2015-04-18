@@ -1,0 +1,11 @@
+[template]
+src = "postgresql.conf.tmpl"
+dest = "/opt/psql-data/postgresql.conf"
+uid = 102
+gid = 105
+mode = "0600"
+keys = [
+  "/psql/conf",
+]
+# check_cmd = "" (no check)
+reload_cmd = "/opt/psql_safe_stop.sh"

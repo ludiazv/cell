@@ -1,0 +1,25 @@
+[Unit]
+Description=Atlo Ideas cell metadata daemon
+After=etcd.service
+After=fleet.service
+Requires=etcd.service
+Requires=fleet.service
+
+[Service]
+EnvironmentFile=/etc/environment
+ExecStart=/bin/sh -c '\
+             etcdctl mkdir /cell/metadata 2> /dev/null > /dev/null ; \
+             etcdctl get /cell/metadata/${COREOS_PRIVATE_IPV4} 2> /dev/null > /dev/null ; \
+             [ $? -ne 0 ] && etcdctl set /cell/metadata/${COREOS_PRIVATE_IPV4} "dc=one" ; \
+			 while true; do \
+			   MD=$(etcdctl watch /cell/metadata/${COREOS_PRIVATE_IPV4}) ; \
+			   CFILE=/run/systemd/system/fleet.service.d/21-metadata.conf ; \
+			   echo "Updating machine ${COREOS_PRIVATE_IPV4} metadata to $MD ..." ; \
+			   echo "[Service]" > $CFILE ; \
+			   echo "Environment=\"FLEET_METADATA=$MD\"" >> $CFILE; \
+			   systemctl daemon-reload; \
+			   systemctl restart fleet.service ; \
+			 done'
+			  
+[X-Fleet]
+Global=true

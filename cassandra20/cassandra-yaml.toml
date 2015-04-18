@@ -1,0 +1,11 @@
+[template]
+src = "cassandra.yaml.tmpl"
+dest = "/opt/cassandra/conf/cassandra.yaml"
+uid = 1337
+gid = 1337
+mode = "0644"
+keys = [
+  "/cassandra/conf",
+]
+# check_cmd = "/usr/sbin/nginx -t -c {{.src}}" (no check)
+reload_cmd = "touch /opt/cassandra_restart.txt"

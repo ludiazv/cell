@@ -1,0 +1,20 @@
+[Unit]
+Description=Basic private docker registry with local storage 
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+KillMode=none
+EnvironmentFile=/etc/environment
+ExceStartPre=-/bin/sh -c 'mkdir -p /opt/registry-data'
+ExecStartPre=-/usr/bin/docker stop registro && /usr/bin/docker kill registro
+ExecStartPre=-/usr/bin/docker rm registro
+ExecStartPre=-/usr/bin/docker pull atlo/registry
+
+ExecStart=/usr/bin/docker run --rm -p ${COREOS_PRIVATE_IPV4}:5000:5000  --name="registro" -v/opt/registry-data:/opt/registry-data atlo/registry
+
+ExecStop=/usr/bin/docker stop registro
+
+[X-Fleet]
+Conflicts=d_registry.service

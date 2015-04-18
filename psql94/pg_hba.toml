@@ -1,0 +1,11 @@
+[template]
+src = "pg_hba.conf.tmpl"
+dest = "/opt/psql-data/pg_hba.conf"
+uid = 102
+gid = 105
+mode = "0600"
+keys = [
+  "/psql/conf/hba",
+]
+# check_cmd = "" (no check)
+reload_cmd = "gosu postgres /opt/psqlbin/pg_ctl reload"

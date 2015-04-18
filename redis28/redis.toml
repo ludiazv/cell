@@ -1,0 +1,11 @@
+[template]
+src = "redis.conf.tmpl"
+dest = "/etc/redis/redis.conf"
+uid = 101
+gid = 102
+mode = "0644"
+keys = [
+  "/redis",
+]
+# check_cmd = "/usr/sbin/nginx -t -c {{.src}}" (no check)
+reload_cmd = "touch /opt/redis_restart.txt"

@@ -1,0 +1,22 @@
+[Unit]
+Description=Redis 2.8 Service - instance %i
+After=etcd.service
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+KillMode=none
+EnvironmentFile=/etc/environment
+ExecStartPre=-/usr/bin/docker kill redis-%i
+ExecStartPre=-/usr/bin/docker rm redis-%i
+ExecStartPre=/usr/bin/docker pull atlo/redis28
+ExecStartPre=-/bin/sh -c 'DPS=$(docker ps -a | grep redis-data-vol) ; \
+						 [ -z "$DPS" ] && docker create --name="redis-data-vol" -v /opt/redis_data atlo/redis28 '
+						 
+ExecStart=/usr/bin/docker run --privileged --rm --name redis-%i -e HOST_IP=${COREOS_PRIVATE_IPV4} -e CELL_ETCD_PREFIX=/ -p ${COREOS_PRIVATE_IPV4}:6379:6379 atlo/redis28
+ExecStop=/usr/bin/docker stop redis-%i  >/dev/null
+
+[X-Fleet]
+Conflicts=redis@*.service
+MachineMetadata=redis=true

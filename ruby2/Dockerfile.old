@@ -1,0 +1,21 @@
+# Cell container with RMV and ruby2
+FROM atlo/cell
+MAINTAINER Luis Diaz <ldiaz@atloideas.com>
+ENV DEBIAN_FRONTEND   noninteractive
+
+# Do an update for packages
+RUN apt-get update -yq 
+# ADD keys and installs RVM 
+RUN gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 && \curl -sSL https://get.rvm.io | bash -s stable
+
+# add RMV path to PATH ENV + Install ruby 2.x
+env PATH /usr/local/rvm/bin:$PATH
+RUN /bin/bash -l -c "rvm requirements"
+RUN /bin/bash -l -c "rvm install 2.2.1"
+RUN /bin/bash -l -c "rvm alias create default 2.2.1"
+RUN /bin/bash -l -c "gem install bundler --no-ri --no-rdoc"
+
+ADD ruby_bash.sh /opt/ruby_bash.sh
+RUN chmod +x /opt/ruby_bash.sh
+
+CMD /opt/ruby_bash.sh
