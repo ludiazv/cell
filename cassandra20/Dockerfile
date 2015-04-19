@@ -6,10 +6,10 @@ ENV DEBIAN_FRONTEND   noninteractive
 RUN apt-get update -qy && apt-get install -qy python2.6 && apt-get autoclean && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install cassandra from tar file and create user for cassandra
-ADD dsc-cassandra-2.0.13-bin.tar.gz /opt
-COPY jna-platform-4.1.0.jar /opt/dsc-cassandra-2.0.13/lib/jna-platform.jar
-COPY jna-4.1.0.jar /opt/dsc-cassandra-2.0.13/lib/jna.jar
-RUN ln -s /opt/dsc-cassandra-2.0.13 /opt/cassandra && ln -s /opt/cassandra/bin /opt/casbin && \
+#ADD dsc-cassandra-2.0.13-bin.tar.gz /opt
+
+RUN wget -O /tmp/dsc-cassandra.tar.gz http://downloads.datastax.com/community/dsc-cassandra-2.0.14-bin.tar.gz && tar -C /opt -xzf /tmp/dsc-cassandra.tar.gz && rm -f /tmp/dsc-cassandra.tar.gz
+RUN ln -s /opt/dsc-cassandra-2.0.14 /opt/cassandra && ln -s /opt/cassandra/bin /opt/casbin && \
 	groupadd -g 1337 cassandra && \
     useradd  -u 1337 -g cassandra -s /bin/sh -d /opt/cassandra-data cassandra && \
 	mkdir -p /opt/cassandra-log && \
@@ -18,8 +18,11 @@ RUN ln -s /opt/dsc-cassandra-2.0.13 /opt/cassandra && ln -s /opt/cassandra/bin /
 	mkdir -p /opt/cassandra-data/data/saved_caches && \
     chown -R cassandra:cassandra /opt/cassandra-data && \
 	chown -R cassandra:cassandra /opt/cassandra && \
-	chown -R cassandra:cassandra /opt/dsc-cassandra-2.0.13 && \
+	chown -R cassandra:cassandra /opt/dsc-cassandra-2.0.14 && \
 	chown -R cassandra:cassandra /opt/cassandra-log && chown -R cassandra:cassandra /opt/casbin
+
+COPY jna-platform-4.1.0.jar /opt/dsc-cassandra-2.0.14/lib/jna-platform.jar
+COPY jna-4.1.0.jar /opt/dsc-cassandra-2.0.14/lib/jna.jar
 
 USER cassandra
 # Declare data and log volumes
@@ -40,11 +43,3 @@ ENTRYPOINT ["/opt/cassandra_entry.sh"]
 
 
 
-
-
-# --- old----
-#RUN apt-get update -y && apt-get install curl -y
-#RUN echo "deb http://debian.datastax.com/community stable main" | tee -a #/etc/apt/sources.list.d/cassandra.sources.list
-#RUN curl -L http://debian.datastax.com/debian/repo_key | apt-key add - && apt-get update -y
-#RUN apt-get install -y dsc20=2.0.12-1 cassandra=2.0.12
-#RUN service cassandra stop && rm -rf /var/lib/cassandra/data/system/*
