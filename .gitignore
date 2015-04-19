@@ -4,8 +4,8 @@ TODO.txt
 /cell/bussybox*
 /cell/debian_wheezy*
 /cassandra20/*.tar.gz
-/jre7/*.tar.gz
-/jre8/*.tar.gz
+/jre7/*.gz
+/jre8/*.gz
 /registry/test-data
 
 
