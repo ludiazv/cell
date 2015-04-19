@@ -8,7 +8,7 @@ RUN apt-get update -qy && apt-get install -qy python2.6 && apt-get autoclean && 
 # Install cassandra from tar file and create user for cassandra
 #ADD dsc-cassandra-2.0.13-bin.tar.gz /opt
 
-RUN wget --quiet -O - http://downloads.datastax.com/community/dsc-cassandra-2.0.14-bin.tar.gz | tar xz -C /opt 
+RUN wget -O - http://downloads.datastax.com/community/dsc-cassandra-2.0.14-bin.tar.gz | tar xz -C /opt 
 RUN ln -s /opt/dsc-cassandra-2.0.14 /opt/cassandra && ln -s /opt/cassandra/bin /opt/casbin && \
 	groupadd -g 1337 cassandra && \
     useradd  -u 1337 -g cassandra -s /bin/sh -d /opt/cassandra-data cassandra && \
