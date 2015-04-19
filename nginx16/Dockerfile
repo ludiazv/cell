@@ -3,7 +3,7 @@ FROM atlo/cell
 MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 ENV DEBIAN_FRONTEND   noninteractive
 
-# Install dotdeb repository where redis 2.8 is located
+# Install nginx repository
 RUN echo "deb http://nginx.org/packages/debian/ wheezy nginx" | tee -a /etc/apt/sources.list.d/nginx.sources.list && \
     echo "deb-src http://nginx.org/packages/debian/ wheezy nginx" | tee -a /etc/apt/sources.list.d/nginx.sources.list && \
 	wget --quiet -O - http://nginx.org/keys/nginx_signing.key | apt-key add - && \
