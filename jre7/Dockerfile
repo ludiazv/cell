@@ -9,7 +9,7 @@ RUN wget --progress=bar --no-check-certificate -O /tmp/jre.tar.gz --header "Cook
 RUN chown -R root:root /opt/jre1.7.0_80 && ln -s /opt/jre1.7.0_80 /opt/java \
     && update-alternatives --install "/usr/bin/java" "java" "/opt/java/bin/java" 1 \
 	&& update-alternatives --set java /opt/java/bin/java \
-	&& rm -fR /tmp/* && apt-get update -yq && apt-get install libjna-java -qy apt-get autoclean && apt-get clean \
+	&& rm -fR /tmp/* && apt-get update -yq && apt-get install libjna-java -qy && apt-get autoclean && apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* 
 	
 # Set JAVA_HOME
