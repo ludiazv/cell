@@ -6,6 +6,8 @@ sysctl -w net.core.somaxconn=4128 > /dev/null
 # Avoids fails on save to disk
 sysctl -w vm.overcommit_memory=1 > /dev/null
 sysctl -p
+# Disable THP
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
 
 # Set trap to kill all processes when docker stop
 DO_LOOP=true
