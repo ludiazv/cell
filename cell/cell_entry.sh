@@ -16,8 +16,10 @@ else
 	echo "$(date -uIseconds) $HN $SCRIPT INFO: Skiping confcell.sh as no URL and MAN_ID provided"
 fi
 # Run confd in background within the container
+echo "Debug pars: CELL_ETCD_PREFIX=$CELL_ETCD_PREFIX,CELL_CONFD_INTERVAL=$CELL_CONFD_INTERVAL,CELL_ETCD_NODE=$CELL_ETCD_NODE"
 [ -z "$CELL_ETCD_PREFIX" ] && CELL_ETCD_PREFIX="/"
 [ -z "$CELL_ETCD_NODE"] && CELL_ETCD_NODE="http://$HOST_IP:4001"
+
 ETCD_NODE=$CELL_ETCD_NODE
 
 echo "$(date -uIseconds) $HN $SCRIPT INFO: Starting confd for node $ETCD_NODE with prefix $CELL_ETCD_PREFIX ..."
