@@ -17,7 +17,9 @@ else
 fi
 # Run confd in background within the container
 [ -z "$CELL_ETCD_PREFIX" ] && CELL_ETCD_PREFIX="/"
-ETCD_NODE="http://$HOST_IP:4001"
+[ -z "$CELL_ETCD_NODE"] && CELL_ETCD_NODE="http://$HOST_IP:4001"
+ETCD_NODE=$CELL_ETCD_NODE
+
 echo "$(date -uIseconds) $HN $SCRIPT INFO: Starting confd for node $ETCD_NODE with prefix $CELL_ETCD_PREFIX ..."
 echo "$(date -uIseconds) $HN $SCRIPT INFO: Killing any running confd ..."
 killall confd > /dev/null 2>/dev/null
