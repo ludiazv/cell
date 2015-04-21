@@ -2,7 +2,7 @@
 
 HN=$(hostname)
 SCRIPT=$(basename $0)
-WAIT=10
+WAIT=15
 WAITLG=90
 DO_LOOP=true
 
