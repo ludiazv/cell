@@ -33,7 +33,10 @@ EXPOSE 5432
 ADD psql_entry.sh 	/opt/psql_entry.sh
 ADD psql_init.sh  	/opt/psql_init.sh
 ADD psql_backup.sh  /opt/psql_backup.sh
+ADD postgres_uid.sh /opt/postgres_uid.sh
+ADD postgres_gid.sh /opt/postgres_gid.sh
 ADD psql_safe_stop.sh /opt/psql_safe_stop.sh
+
 
 ENTRYPOINT ["/opt/psql_entry.sh"]
 
