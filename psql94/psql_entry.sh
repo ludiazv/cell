@@ -26,11 +26,12 @@ while $DO_LOOP; do
 	gosu postgres /opt/psqlbin/pg_ctl status > /dev/null 2> /dev/null
 	if [ $? -ne 0 ]; then
 		echo "$(date -uIseconds) $HN $SCRIPT INFO: PSQL server is stoped, starting it..."
-		sleep 2
+		sleep $WAIT
 		/opt/cell_entry.sh '/opt/psqlbin/pg_ctl start'  # Start as daemon
+		sleep $WAIT
 	fi
 	
-	read -t 120
+	read -t 90
 	
 	if [ $? -eq 0 ]; then
 		 DO_LOOP=false 
