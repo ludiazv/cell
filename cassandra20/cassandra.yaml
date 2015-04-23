@@ -1,4 +1,5 @@
-# Cassandra storage config YAML 
+# Cassandra storage config YAML
+# Config date: {{ if exists "/cassandra/conf/date" }} {{getv "/cassandra/conf/date"}} {{else}} "not defined" {{end}} 
 
 # NOTE:
 #   See http://wiki.apache.org/cassandra/StorageConfiguration for
@@ -262,7 +263,16 @@ seed_provider:
       parameters:
           # seeds is actually a comma-delimited list of addresses.
           # Ex: "<ip1>,<ip2>,<ip3>"
-          - seeds: "{{ getv "/cassandra/conf/seeds" }}"
+          # {{ $seeds := getenv "CELL_LOCAL_IP" }}
+          # {{ $auto_seeds := getvs "/cassandra/seeds/*" }}
+          # {{range getvs "/cassandra/seeds/*"}}
+          #    value: {{.}}
+          # {{end}}
+          {{ if $auto_seeds }}
+          - seeds: "{{ join $auto_seeds "," }}"
+          {{ else }}
+          - seeds: "{{ $seeds }}"
+          {{ end }}
 
 # For workloads with more data than can fit in memory, Cassandra's
 # bottleneck will be reads that need to fetch data from

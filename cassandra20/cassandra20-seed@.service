@@ -1,0 +1,32 @@
+[Unit]
+Description=Cassandra 2.0 SEED Service - instance %i
+#After=etcd.service
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+KillMode=none
+EnvironmentFile=/etc/environment
+ExecStartPre=-/usr/bin/docker kill cass-seed-%i
+ExecStartPre=-/usr/bin/docker rm cass-seed-%i
+#ExecStartPre=-/usr/bin/docker pull atlo/cassandra20
+ExecStartPre=-/bin/bash -c ' DPS=$(docker ps -a | grep cass-data-vol) ; \
+							[ -z "$DPS" ] && docker create --name="cass-data-vol" -v /opt/cassandra-data atlo/cassandra20 '
+						 
+ExecStart=/bin/bash -c -l ' MIP=$COREOS_PRIVATE_IPV4 ; \
+							PREFIX="/" ; \
+							etcdctl mkdir ${PREFIX}cassandra/seeds ; \
+							etcdctl set ${PREFIX}cassandra/seeds/seed-%i "$MIP" ; \ 
+							docker run --rm -e HOST_IP=$MIP -e CELL_ETCD_PREFIX="$PREFIX" \
+							-e CELL_ETCD_NODE="$ETCDCTL_PEERS" -e HOST_NAME="$(hostname)" \
+							-p ${MIP}:9000:9000 -p ${MIP}:9001:9001 -p ${MIP}:7199:7199 -p ${MIP}:9042:9042 -p ${MIP}:9160:9160  -p ${MIP}:61621:61621 \
+							--volumes-from="cass-data-vol" --name cass-seed-%i \
+							--net=host atlo/cassandra20 '
+
+ExecStop=/bin/bash -c -l ' PREFIX="/"; etcdctl rm ${PREFIX}cassandra/seeds/seed-%i ; docker stop cass-seed-%i ' 
+
+[X-Fleet]
+Conflicts=cassandra-seed@*.service
+Conflicts=cassandra-node@*.service
+MachineMetadata="cass-seed=true"

@@ -6,6 +6,7 @@ gid = 1337
 mode = "0644"
 keys = [
   "/cassandra/conf",
+  "/cassandra/seeds",
 ]
-# check_cmd = "/usr/sbin/nginx -t -c {{.src}}" (no check)
-reload_cmd = "touch /opt/cassandra_restart.txt"
+# check_cmd = "" (no check)
+reload_cmd = "touch /opt/cassandra_restart.txt && killall -q java ; echo 'killed!'"
