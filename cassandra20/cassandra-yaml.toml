@@ -9,4 +9,4 @@ keys = [
   "/cassandra/seeds",
 ]
 # check_cmd = "" (no check)
-reload_cmd = "touch /opt/cassandra_restart.txt && killall -q java ; echo 'killed!'"
+reload_cmd = "touch /opt/cassandra_restart.txt"

@@ -2,7 +2,7 @@
 Description=Cassandra 2.0 Service SideKick - instance %i
 # Requirements
 #Requires=etcd.service
-Requires=cassandra20-seed@%i.service
+Requires=cassandra20-node@%i.service
 #Order & binding
 #After=etcd.service
 After=cassandra20-node@%i.service
@@ -12,17 +12,17 @@ BindsTo=cassandra20-node@%i.service
 EnvironmentFile=/etc/environment
 ExecStart=/bin/sh -c 'PREFIX="/" ; while true; do \
 				        sleep 30 ; \
-						ST="$(docker exec cass-seed-%i /opt/cassandra/bin/nodetool status)" ; \
+						ST="$(docker exec cass-node-%i /opt/cassandra/bin/nodetool status)" ; \
 						T=$(date -uIseconds) ; \
-						etcdctl set --ttl 80 ${PREFIX}cassandra/cassandra-%i-ip ${COREOS_PRIVATE_IPV4} > /dev/null ; \
-						etcdctl set --ttl 80 ${PREFIX}cassandra/cassandra-%i-port 9042 > /dev/null ; \
-						etcdctl set --ttl 80 ${PREFIX}cassandra/cassandra-%i-status "$ST $T" > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}cassandra/node-cassandra-%i-ip ${COREOS_PRIVATE_IPV4} > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}cassandra/node-cassandra-%i-port 9042 > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}cassandra/node-cassandra-%i-status "$ST $T" > /dev/null ; \
 	 				 	sleep 30; done'
 
 ExecStop=/bin/bash -c  -l ' PREFIX="/" ; \
-					  		etcdctl rm ${PREFIX}cassandra/cassandra-%i-ip ; \
-					  		etcdctl rm ${PREFIX}cassandra/cassandra-%i-port ; \
-					  		etcdctl rm ${PREFIX}cassandra/cassandra-%i-status '
+					  		etcdctl rm ${PREFIX}cassandra/node-cassandra-%i-ip ; \
+					  		etcdctl rm ${PREFIX}cassandra/node-cassandra-%i-port ; \
+					  		etcdctl rm ${PREFIX}cassandra/node-cassandra-%i-status '
 
 [X-Fleet]
 MachineOf=cassandra20-node@%i.service

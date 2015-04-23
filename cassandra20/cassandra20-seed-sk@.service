@@ -14,16 +14,16 @@ ExecStart=/bin/sh -c 'PREFIX="/" ; while true; do \
 				        sleep 30 ; \
 						ST="$(docker exec cass-seed-%i /opt/cassandra/bin/nodetool status)" ; \
 						T=$(date -uIseconds) ; \
-						etcdctl set --ttl 80 ${PREFIX}cassandra/cassandra-%i-ip ${COREOS_PRIVATE_IPV4} > /dev/null ; \
-						etcdctl set --ttl 80 ${PREFIX}cassandra/cassandra-%i-port 9042 > /dev/null ; \
-						etcdctl set --ttl 80 ${PREFIX}cassandra/cassandra-%i-status "$ST $T" > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}cassandra/seed-cassandra-%i-ip ${COREOS_PRIVATE_IPV4} > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}cassandra/seed-cassandra-%i-port 9042 > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}cassandra/seed-cassandra-%i-status "$ST $T" > /dev/null ; \
 	 				 	sleep 30; done'
 
 ExecStop=/bin/bash -c  -l ' PREFIX="/" ; \
-					  		etcdctl rm ${PREFIX}cassandra/cassandra-%i-ip ; \
-					  		etcdctl rm ${PREFIX}cassandra/cassandra-%i-port ; \
+					  		etcdctl rm ${PREFIX}cassandra/seed-cassandra-%i-ip ; \
+					  		etcdctl rm ${PREFIX}cassandra/seed-cassandra-%i-port ; \
 					  		etcdctl rm ${PREFIX}cassandra/conf/seed-%i ; \
-					  		etcdctl rm ${PREFIX}cassandra/cassandra-%i-status '
+					  		etcdctl rm ${PREFIX}cassandra/seed-cassandra-%i-status '
 
 [X-Fleet]
 MachineOf=cassandra20-seed@%i.service
