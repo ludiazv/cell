@@ -10,6 +10,8 @@ cd rails42 && ./build.sh ; cd ..
 cd cassandra20 && ./build.sh ; cd ..
 cd redis28 && ./build.sh ; cd ..
 cd psql94  && ./build.sh ; cd ..
+cd registry && ./build.sh; cd ..
+
 #cd memcached && ./build.sh && cd ..
 #cd eleasticsearch15 && ./build.sh ; cd ..
 
