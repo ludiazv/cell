@@ -1,2 +1,2 @@
 #!/bin/sh
-docker exec -t -i cas gosu cassandra /opt/casbin/cqlsh -u cell -p cell $(hostname)
+docker exec -t -i $1 gosu cassandra /opt/casbin/cqlsh -u $2 -p $3 $(hostname)

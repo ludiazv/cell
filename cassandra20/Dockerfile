@@ -14,7 +14,7 @@ RUN ln -s /opt/dsc-cassandra-2.0.14 /opt/cassandra && ln -s /opt/cassandra/bin /
     useradd  -u 1337 -g cassandra -s /bin/sh -d /opt/cassandra-data cassandra && \
 	mkdir -p /opt/cassandra-log && \
 	sed -i 's/^\(log4j\.appender\.R\.File=\).*/\1\/opt\/cassandra-log\/system.log/' /opt/cassandra/conf/log4j-server.properties && \
-	sed -i 's/^\(log4j\.rootLogger=\).*/\1WARN,stdout,R/' /opt/cassandra/conf/log4j-server.properties && \
+	sed -i 's/^\(log4j\.rootLogger=\).*/\1INFO,stdout,R/' /opt/cassandra/conf/log4j-server.properties && \
 	mkdir -p /opt/cassandra-data/data && mkdir -p /opt/cassandra-data/commitlog && \
 	mkdir -p /opt/cassandra-data/data/saved_caches && \
     chown -R cassandra:cassandra /opt/cassandra-data && \
