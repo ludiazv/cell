@@ -5,25 +5,27 @@ HN=$(hostname)
 WAIT=3
 [ -z "$CELL_CONFD_INTERVAL" ] && CELL_CONFD_INTERVAL=60
 
-echo "$(date -uIseconds) $HN $SCRIPT INFO: Booting cell"
-if [ -n "$CONFCELL_URL" ] && [ -n "$CONFCELL_MANIFEST_ID" ]; then
-	echo "$(date -uIseconds) $HN $SCRIPT INFO: Running confcell.sh with URL=${CONFCELL_URL} & MAN_ID=${CONFCELL_MANIFEST_ID}"
-	CDIR=$(pwd)
-	cd /opt/confcell
-	./confcell.sh
-	cd $CDIR
-else
+echo "$HN $SCRIPT INFO: Booting cell"
+# Removed conf_cell
+#if [ -n "$CONFCELL_URL" ] && [ -n "$CONFCELL_MANIFEST_ID" ]; then
+#	echo "$(date -uIseconds) $HN $SCRIPT INFO: Running confcell.sh with URL=${CONFCELL_URL} & MAN_ID=${CONFCELL_MANIFEST_ID}"
+#	CDIR=$(pwd)
+#	cd /opt/confcell
+#	./confcell.sh
+#	cd $CDIR
+#else
 	echo "$(date -uIseconds) $HN $SCRIPT INFO: Skiping confcell.sh as no URL and MAN_ID provided"
-fi
+#fi
+
 # Run confd in background within the container
 echo "Debug pars: CELL_ETCD_PREFIX=$CELL_ETCD_PREFIX,CELL_CONFD_INTERVAL=$CELL_CONFD_INTERVAL,CELL_ETCD_NODE=$CELL_ETCD_NODE"
 [ -z "$CELL_ETCD_PREFIX" ] && CELL_ETCD_PREFIX="/"
-[ -z "$CELL_ETCD_NODE" ] && CELL_ETCD_NODE="http://$HOST_IP:4001"
+[ -z "$CELL_ETCD_NODE" ] && CELL_ETCD_NODE="http://$HOST_IP:2379" # IANA PORT
 
 ETCD_NODE=$CELL_ETCD_NODE
 
-echo "$(date -uIseconds) $HN $SCRIPT INFO: Starting confd for node $ETCD_NODE with prefix $CELL_ETCD_PREFIX ..."
-echo "$(date -uIseconds) $HN $SCRIPT INFO: Killing any running confd ..."
+echo "$HN $SCRIPT INFO: Starting confd for node $ETCD_NODE with prefix $CELL_ETCD_PREFIX ..."
+echo "$HN $SCRIPT INFO: Killing any running confd ..."
 killall confd > /dev/null 2>/dev/null
 sleep $WAIT
 nice confd -backend etcd -node $ETCD_NODE -interval $CELL_CONFD_INTERVAL -prefix $CELL_ETCD_PREFIX &
@@ -35,7 +37,6 @@ sleep $WAIT
 #   $CMD is commmand to execute captured from command line parameters
 #   $CELL_EXEC_BACKGROUND can be "" or "&" if "sell" exec type is selected to launch cell in background mode
 #   $CELL_EXE_SLEEP can be set to wait some time before execution by default it wait 3 seconds
-
 CMD="$@"
 [ -z "$CMD" ] && CMD="/bin/sh"
 [ -z "$CELL_EXEC_TYPE" ] && CELL_EXEC_TYPE="exec"

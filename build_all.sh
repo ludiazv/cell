@@ -6,7 +6,7 @@ cd golang14 && ./build.sh ; cd ..
 cd jre7 && ./build.sh ; cd ..
 cd ruby2 && ./build.sh ; cd ..
 cd rails42 && ./build.sh ; cd ..
-
+cd mysql && ./buld.sh ; cd ..
 cd cassandra20 && ./build.sh ; cd ..
 cd redis28 && ./build.sh ; cd ..
 cd psql94  && ./build.sh ; cd ..

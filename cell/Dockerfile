@@ -17,9 +17,10 @@ ADD gosu-amd64-1.2 /tmp/gosu
 RUN chmod u=rwx,g=rx,o=rx /tmp/gosu && mv /tmp/gosu /usr/local/bin/gosu
 
 # ADD files
-RUN mkdir -p /opt/confcell
-ADD confcell.sh /opt/confcell/confcell.sh 
+#RUN mkdir -p /opt/confcell
+#ADD confcell.sh /opt/confcell/confcell.sh 
 ADD cell_entry.sh /opt/cell_entry.sh 
-RUN chmod u=rwx,g=rx,o=r /opt/confcell/confcell.sh && chmod u=rwx,g=rx,o=r /opt/cell_entry.sh
+RUN chmod u=rwx,g=rx,o=r /opt/cell_entry.sh
+#chmod u=rwx,g=rx,o=r /opt/confcell/confcell.sh 
 
 ENTRYPOINT ["/opt/cell_entry.sh"]
