@@ -12,11 +12,12 @@ RUN echo "deb http://nginx.org/packages/debian/ wheezy nginx" | tee -a /etc/apt/
 	apt-get autoclean && apt-get clean && rm -rf /var/lib/apt/lists/* 
 
 ADD nginx_entry.sh /opt/nginx_entry.sh
+ADD nginx.toml /etc/confd/conf.d/nginx.toml
+ADD nginx.conf /etc/confd/templates/nginx.conf.tmpl
 RUN chmod 755 /opt/nginx_entry.sh && mkdir -p /opt/nginx /opt/nginx/sites && chown -R nginx:nginx /opt/nginx
 
 # forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /var/log/nginx/access.log
-RUN ln -sf /dev/stderr /var/log/nginx/error.log
+RUN ln -sf /dev/stdout /var/log/nginx/access.log && ln -sf /dev/stderr /var/log/nginx/error.log
 
 VOLUME ["/var/cache/nginx"]
 
@@ -24,7 +25,7 @@ VOLUME ["/var/cache/nginx"]
 # HTTP & HTTP SSL Ports
 EXPOSE 80 443
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/opt/nginx_entry.sh"]
 
 
 

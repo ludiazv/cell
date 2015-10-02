@@ -1,11 +1,12 @@
 [template]
 src = "nginx.conf.tmpl"
 dest = "/etc/nginx/nginx.conf"
-uid = nginx
-gid = nginx
-mode = "0600"
+uid = "nginx"
+gid = "nginx"
+mode = "0644"
 keys = [
   "/nginx/conf",
+  "/nginx/maintenance"
 ]
-# check_cmd = "" (no check)
-reload_cmd = "gosu postgres /opt/psqlbin/pg_ctl reload"
+check_cmd = "/usr/sbin/nginx -t -c {{ .src }}"
+reload_cmd = ""
