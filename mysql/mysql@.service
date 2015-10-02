@@ -1,0 +1,33 @@
+[Unit]
+Description=MySQL 5.6 service - instance %i
+After=docker.service
+Requires=docker.service
+After=mysql-init@%i.service
+Requires=mysql-init@%i.service
+
+[Service]
+TimeoutStartSec=0
+KillMode=none
+EnvironmentFile=/etc/environment
+ExecStartPre=-/usr/bin/docker stop mysql-%i
+ExecStartPre=-/usr/bin/docker rm mysql-%i
+ExecStartPre=-/usr/bin/docker pull atlo/mysql
+ExecStart=/bin/bash -c 'PREFIX="/"; \
+						if [ -f /opt/mysql-data/mysql_cell_init.txt ] ; then \
+						docker run --rm -p ${COREOS_PRIVATE_IPV4}:3306:3306 --name mysql-%i \
+							   -e HOST_IP=${COREOS_PRIVATE_IPV4} -e CELL_ETCD_PREFIX=${PREFIX} \
+							   -e CELL_ETCD_NODE="http://${COREOS_PRIVATE_IPV4}:2379" \
+							   -v /opt/mysql-data:/opt/mysql-data atlo/mysql; else\
+						echo "ERROR: MYSQL not initalized!!"; exit 1; \
+		 				fi'
+
+ExecStop=/usr/bin/docker stop -t 25 mysql-%i
+						 
+[X-Fleet]
+Conflicts=mysql@*.service
+MachineOf=mysql-init@%i.service
+
+#docker run --rm -p ${COREOS_PRIVATE_IPV4}:3306:3306 --name mysql \
+#		-e HOST_IP=${COREOS_PRIVATE_IPV4} -e CELL_ETCD_PREFIX=${PREFIX} \
+#		-e CELL_ETCD_NODE="http://${COREOS_PRIVATE_IPV4}:2379" \
+#		-v /opt/mysql-data:/opt/mysql-data atlo/mysql

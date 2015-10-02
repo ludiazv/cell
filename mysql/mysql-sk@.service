@@ -1,0 +1,23 @@
+[Unit]
+Description=Mysql 5.6 Service SideKick - instance %i
+# Requirements
+#Requires=etcd.service
+Requires=mysql@%i.service
+#Order & binding
+After=mysql@%i.service
+BindsTo=mysql@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+ExecStart=/bin/sh -c 'PREFIX="/" ; while true; do \
+				        sleep 30 ; \
+						ST=$(docker exec mysql-%i /opt/mysql_status.sh) ; T=$(date -uIseconds) ; \
+						etcdctl set --ttl 80 ${PREFIX}mysql/mysql-%i-ip ${COREOS_PRIVATE_IPV4} > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}mysql/mysql-%i-port 3306 > /dev/null ; \
+						etcdctl set --ttl 80 ${PREFIX}mysql/mysql-%i-status "$ST $T" > /dev/null ; \
+	 				 	sleep 30; done'
+ExecStop=/bin/sh -c ' PREFIX="/" ; \
+					  etcdctl rm ${PREFIX}mysql/mysql-%i-ip  ; etcdctl rm ${PREFIX}mysql/mysql-%i-port ; etcdctl rm ${PREFIX}mysql/mysql-%i-status'
+
+[X-Fleet]
+MachineOf=mysql@%i.service

@@ -1,0 +1,35 @@
+[Unit]
+Description=MySQL 5.6 initilizer - instance %i
+After=docker.service
+Requires=docker.service
+
+[Service]
+#TimeoutStartSec=0
+#KillMode=none
+Type=simple
+RemainAfterExit=true
+EnvironmentFile=/etc/environment
+ExecStartPre=-/usr/bin/docker stop mysql-init-%i
+ExecStartPre=-/usr/bin/docker rm mysql-init-%i
+ExecStartPre=-/usr/bin/docker pull atlo/mysql
+ExecStartPre=/bin/bash -c 'mkdir -p /opt/mysql-data ; \
+						  id -u mysql &> /dev/null ; \
+						  if [ $? -eq 1 ] ; then \
+						  	docker kill mysql-usr; docker rm mysql-usr ; \
+							gid=$(docker run -t --rm --name mysql-usr --entrypoint="/opt/mysql_gid.sh" atlo/mysql) ; \
+							echo "gid:$gid" ;\
+							/bin/bash -c "groupadd -g 2016 mysql" ; \
+							uid=$(docker run -t --rm --name mysql-usr --entrypoint="/opt/mysql_uid.sh" atlo/mysql) ; \
+							useradd -r -u 2016 -g mysql mysql; \
+						  fi ; \
+						  chown -R mysql:mysql /opt/mysql-data ;\
+						  echo "User,group and mysq-data ready ..."'
+
+ExecStart=/bin/bash -c ' if [ ! -f /opt/mysql-data/mysql_cell_init.txt ] ; then \
+							docker  run -t --rm --name mysql-init-%i \
+		 					--entrypoint="/opt/mysql_init.sh" -v /opt/mysql-data:/opt/mysql-data atlo/mysql ; else \
+		 				 	echo "MySQL data store already initialized. Nothing done!" ; fi'
+						 
+[X-Fleet]
+Conflicts=mysql-init@*.service
+MachineMetadata=db=true

@@ -1,0 +1,11 @@
+[template]
+src = "my.cnf.tmpl"
+dest = "/etc/mysql/my.cnf"
+uid = 2016
+gid = 2016
+mode = "0644"
+keys = [
+  "/mysql/conf",
+]
+# check_cmd = "" (no check)
+reload_cmd = "kill -TERM $(cat /var/run/mysqld/mysqld.pid)"
