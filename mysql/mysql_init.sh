@@ -55,6 +55,8 @@ echo "Executing init SQL..."
 	CREATE DATABASE IF NOT EXISTS  \`${CELL_DB}\` ;
 	CREATE USER '${CELL_USER}'@'%' IDENTIFIED BY '${CELL_PWD}' ;
 	GRANT ALL ON  \`${CELL_DB}\`.* TO '${CELL_USER}'@'%' ;
+	CREATE USER `bckup`@`localhost` IDENTIFIED BY '#pkt3wsd2$e19';
+	GRANT SHOW DATABASES, SELECT, LOCK TABLES, RELOAD ON *.* TO `bckup`@`localhost`;
 	FLUSH PRIVILEGES ;
 EOSQL
 
