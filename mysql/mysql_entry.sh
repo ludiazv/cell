@@ -29,7 +29,7 @@ while $DO_LOOP; do
 		read -t 90 # nothing to do.
 	else
 		echo "Starting MySql...."
-		/opt/cell_entry.sh \'exec mysqld --user=mysql --datadir=\"/opt/mysql-data\" ${MYSQL_OPTIONS}\'
+		/opt/cell_entry.sh \'exec mysqld ${MYSQL_OPTIONS}\'
 		sleep 2
 		echo "INFO: MySql started with pid $(pidof mysqld)"
 	fi

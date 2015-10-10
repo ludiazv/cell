@@ -8,4 +8,4 @@ keys = [
   "/mysql/conf",
 ]
 # check_cmd = "" (no check)
-reload_cmd = "kill -TERM $(cat /var/run/mysqld/mysqld.pid)"
+reload_cmd = "[ -f /var/run/mysqld/mysqld.pid ] && kill -TERM $(cat /var/run/mysqld/mysqld.pid) || exit 0"

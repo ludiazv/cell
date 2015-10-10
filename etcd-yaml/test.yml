@@ -1,0 +1,22 @@
+etcdyaml:
+  simple_key: "This is a simple key"
+  text_key: |-
+      This is a multi-line key
+      very useful for complex config files
+      or literals of any
+      length
+  directory:
+    simple_key: "This is a child key"
+    etcd_yaml_file_self: ./test.yml  
+    etcd_yaml_fileplain_selfplain: ./test.yml
+    etcd_yaml_key_reference: "/pepo"
+    etcd_yaml_crypt_pasword: "my secret" 
+    subdir:
+        simple_key: "This a grandchildren key"
+        text_key: >
+            Concatenated multiline 
+            key for storing literals without
+            CR or LF.
+
+# include also
+etcd_yaml_include: ["test_include.yml"]

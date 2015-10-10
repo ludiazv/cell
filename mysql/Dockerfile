@@ -22,11 +22,12 @@ ADD mysql_*.sh /opt/
 RUN chmod u=xrw,g=rx,o=rx /opt/mysql_*.sh && mkdir -p /opt/mysql-data && \
 	mkdir -p /opt/mysql-backup && chmod u=rwx,g=x /opt/mysql-data /opt/mysql-backup && \
 	chown mysql:mysql /opt/mysql-data /opt/mysql-backup && chown mysql:mysql /etc/mysql/my.cnf
-	
+
+# ConfD files	
 COPY my.toml /etc/confd/conf.d/my.toml
 COPY my.cnf /etc/confd/templates/my.cnf.tmpl
 
 
 
 
-# ConfD files
+

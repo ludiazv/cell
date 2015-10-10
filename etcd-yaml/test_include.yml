@@ -1,0 +1,12 @@
+etcdyaml:
+  directory:
+      simple_key: "This is a child key overwritten by include"
+      subdir:
+          simple_key_include: "other inclusion in subdir"
+  included_key: "This is a simple key"
+  included_key_text: |-
+      This is a multi-line key
+      very useful for complex config files
+      or literals of any
+      length
+     
