@@ -5,8 +5,8 @@ MYSQL_DATA="/opt/mysql-data"
 
 # check if pql has ben initlizized
 if [ -f $MYSQL_DATA/mysql_cell_init.txt ] ; then
-	echo " $SCRIPT ERROR: MYSQL is initialized"
-	exit 1
+	echo " $SCRIPT MYSQL is initialized. Nothing done!"
+	exit 0
 fi
 
 echo "MySQL DB Setup......"
@@ -37,27 +37,35 @@ fi
 
 # init the DB
 sed -i "s/^\(datadir.*=\).*/\1\/opt\/mysql-data/" /etc/mysql/my.cnf
+sed -Ei 's/^(bind-address|log)/#&/' /etc/mysql/my.cnf
+rm -fr /opt/mysql-data/*
+mkdir -p /opt/mysql-data
+chown -R mysql:mysql /opt/mysql-data
 
 echo 'Running mysql_install_db'
-mysql_install_db --user=mysql --datadir="/opt/mysql-data" --rpm --keep-my-cnf
+mysql_install_db --user=mysql --datadir="/opt/mysql-data" #--rpm --keep-my-cnf
 echo 'Finished mysql_install_db'
 
 # Configure basic service
 #echo "mysqld --user=mysql --datadir="${MYSQL_DATA}" --skip-networking &"
+# init the DB
+sed -i "s/^\(datadir.*=\).*/\1\/opt\/mysql-data/" /etc/mysql/my.cnf
+sed -Ei 's/^(bind-address|log)/#&/' /etc/mysql/my.cnf
 sleep 2
 echo "Starting MSQLD...."
-mysqld --user=mysql --datadir=/opt/mysql-data --skip-networking &
+mysqld --user=mysql --skip-networking &
 pid="$!"
+
 sleep 2
 
 mysql=( mysql --protocol=socket -uroot )
+
 for i in {30..0}; do
 	if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then
 		echo "Mysqld is UP!"
 		break
 	fi
 	echo 'MySQL init process in progress...'
-	ps xa
 	sleep 1
 done
 if [ "$i" = 0 ]; then
@@ -65,7 +73,7 @@ if [ "$i" = 0 ]; then
 	exit 1
 fi
 echo "Executing init SQL..."
-echo "CELL_DB=$CELL_DB,CELL_USER=$CELL_USER,CELL_ROOT_PWD=$CELL_ROOT_PWD,CELL_BKUP_PWD=$CELL_BKUP_PWD"
+#echo "CELL_DB=$CELL_DB,CELL_USER=$CELL_USER,CELL_ROOT_PWD=$CELL_ROOT_PWD,CELL_BKUP_PWD=$CELL_BKUP_PWD"
 "${mysql[@]}" <<-EOSQL
 	-- What's done in this file shouldn't be replicated
 	--  or products like mysql-fabric won't work
@@ -87,12 +95,12 @@ if ! kill -s TERM "$pid" || ! wait "$pid"; then
 	exit 1
 fi
 
-echo "done!"
+echo "done init db!"
 #touch $MYSQL_DATA/mysql_cell_init.txt
+echo "Writing cell siganture files..."
 echo $(date) > $MYSQL_DATA/mysql_cell_init.txt
 [ -n "$CELL_MYSQL_CONFIG" ] && echo "$CELL_MYSQL_CONFIG" > $MYSQL_DATA/mysql_cell_credentials_key.txt
 chown -R mysql:mysql ${MYSQL_DATA}
 echo "MySql init process finished!"
 echo "============================"
-
 exit 0

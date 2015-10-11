@@ -8,7 +8,7 @@
 #/ -y , --yes Assume yes for interective questions.
 #/ -r , --recursive use recursive delete.
 #/ -t , --tunnel="" should be in the format ssh://user[:password]@addr[:port] (default: no tunnel)
-#/ For using etcd-yaml-crtyp functions gpg2 should be installed on the system.
+#/ For using etcd-yaml-crtyp functions gpg2 and gzip **MUST** be installed on the system.
 
 $stderr.sync = true
 require 'rubygems'
@@ -111,8 +111,8 @@ def remove_cryp_keyfile(key_id)
 end
 
 def crypt(val,id)
-	cmd="echo \"#{val}\" | gpg2 --openpgp --compress-algo zlib --batch --yes --trust-model always -e --output -  -r #{id}"
-	res=%(#{cmd})
+	cmd="echo \"#{val}\" | gzip -9 | gpg2 --compress-algo none --batch --yes --trust-model always -e --output -  -r #{id}"
+	res=%x(#{cmd})
 	($? == 0) ? Base64.strict_encode64(res) : nil
 end
 
