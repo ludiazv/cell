@@ -16,4 +16,6 @@ RUN /bin/bash -l -c "source ~/.rvm/scripts/rvm && rvm requirements && rvm instal
 ADD ruby_entry.sh /opt/ruby_entry.sh
 RUN chmod u=rxw,g=rx,o=rx /opt/ruby_entry.sh
 
+VOLUME ["/opt/ruby_run"]
+
 ENTRYPOINT ["/opt/ruby_entry.sh"]

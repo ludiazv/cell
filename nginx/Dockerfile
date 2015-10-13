@@ -1,4 +1,4 @@
-# Cell container With NGINX 1.8
+# Cell container With NGINX 1.8 + PHP-FPM
 FROM atlo/cell
 MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 ENV NGINX_VERSION 1.8.0-1~wheezy
@@ -14,11 +14,11 @@ RUN echo "deb http://nginx.org/packages/debian/ wheezy nginx" | tee -a /etc/apt/
 	apt-get autoclean && apt-get clean && rm -rf /var/lib/apt/lists/* && \
 	ln -sf /dev/stdout /var/log/nginx/access.log && ln -sf /dev/stderr /var/log/nginx/error.log
 
-# Tune php config files
-COPY php-fpm.conf /etc/php5/php-fpm.conf
-COPY www.conf /etc/php5/pool.d/www.conf
-RUN chmod u=rw,g=r,o=r /etc/php5/php-fpm.conf /etc/php5/php-fpm.conf && \
-	sed -i "s/^\(bind-address.*=\).*/\1${CELL_LOCAL_IP}/" 
+# Tune php config files including php.ini
+COPY php-fpm.conf /etc/php5/fpm/php-fpm.conf
+COPY www.conf /etc/php5/fpm/pool.d/www.conf
+RUN chmod u=rw,g=r,o=r /etc/php5/fpm/php-fpm.conf /etc/php5/fpm/pool.d/www.conf && \
+	sed -i "s/^;cgi\.fix_pathinfo=1/cgi\.fix_pathinfo=0/" /etc/php5/fpm/php.ini
 
 VOLUME ["/var/cache/nginx"]
 
@@ -26,14 +26,17 @@ VOLUME ["/var/cache/nginx"]
 # HTTP & HTTP SSL Ports
 EXPOSE 80 443
 
-#ENTRYPOINT ["/opt/nginx_entry.sh"]
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/opt/nginx_entry.sh"]
+#ENTRYPOINT ["/bin/bash"]
 
 ADD nginx_entry.sh /opt/nginx_entry.sh
 ADD nginx.toml /etc/confd/conf.d/nginx.toml
 ADD nginx.conf /etc/confd/templates/nginx.conf.tmpl
 RUN chmod 755 /opt/nginx_entry.sh && mkdir -p /opt/nginx /opt/nginx/sites && chown -R nginx:nginx /opt/nginx
 
+# Testing
+RUN mkdir -p /opt/nginx/sites/sample
+COPY index.html /opt/nginx/sites/sample/index.html
 
 
 

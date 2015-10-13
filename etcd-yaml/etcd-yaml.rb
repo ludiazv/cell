@@ -174,12 +174,11 @@ ARGV.options do |opts|
   opts.parse!
 end
 
-# do your thing
 
 action = ARGV[0] if ARGV.any?
 
 # Set-up etcd conection
-endpoint_uri=URI.parse(endpoint)
+endpoint_uri=URI.parse(endpoint.chomp)
 host = endpoint_uri.host
 port = endpoint_uri.port
 if endpoint_uri.scheme !="http" || host.nil?
@@ -285,7 +284,10 @@ else
 	puts "Action #{action} not recognized. try etcd-yaml.rb --help"
 	exit 1
 end
-
-$net_gateway.close($gateway_port); $net_gateway.shutdown! if !$gateway.nil? && !$gateway_port.nil?
+# Close tunnel
+if !$gateway.nil? && !$gateway_port.nil?
+	$net_gateway.close($gateway_port); 
+	$net_gateway.shutdown!
+end 
 
 
