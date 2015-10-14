@@ -72,6 +72,11 @@ if [ "$i" = 0 ]; then
 	echo >&2 'MySQL init process failed.'
 	exit 1
 fi
+echo "Running MYSQL Tunner..."
+cd /opt
+#perl mysqltuner.pl --buffers --dbstat --idxstat --outputfile result_mysqltuner.txt
+/bin/bash
+
 echo "Executing init SQL..."
 #echo "CELL_DB=$CELL_DB,CELL_USER=$CELL_USER,CELL_ROOT_PWD=$CELL_ROOT_PWD,CELL_BKUP_PWD=$CELL_BKUP_PWD"
 "${mysql[@]}" <<-EOSQL
@@ -89,6 +94,8 @@ echo "Executing init SQL..."
 	GRANT SHOW DATABASES, SELECT, LOCK TABLES, RELOAD ON *.* TO \`bckup\`@\`localhost\`;
 	FLUSH PRIVILEGES ;
 EOSQL
+
+
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
 	echo >&2 'MySQL init process failed.'

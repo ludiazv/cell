@@ -7,12 +7,12 @@ ENV MYSQL_VERSION 5.6
 RUN groupadd -g 2016 mysql && adduser  --uid 2016 --ingroup mysql --shell /bin/bash --gecos "" --disabled-password mysql
 
 # Debian MYSQL
-RUN apt-get update -qy && apt-get install -qy mysql-server && apt-get autoclean && apt-get clean #&& rm -rf /var/lib/apt/lists/* && rm -fr /var/lib/mysql/*
+RUN apt-get update -qy && apt-get install -qy mysql-server && apt-get autoclean && apt-get clean #&& rm -rf /var/lib/apt/lists/* && rm -fr /var/lib/mysql/* && wget https://raw.githubusercontent.com/major/MySQLTuner-perl/master/basic_passwords.txt -O /opt/basic_passwords.txt
 
 # Install perl 
-#RUN apt-get update -qy && apt-get install -yq perl --no-install-recommends && apt-get autoclean && #apt-get clean && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update -qy && apt-get install -yq perl --no-install-recommends && apt-get autoclean && #apt-get clean && rm -rf /var/lib/apt/lists/* && wget http://mysqltuner.pl/ -O /opt/mysqltuner.pl && wget https://raw.githubusercontent.com/major/MySQLTuner-perl/master/basic_passwords.txt -O /opt/basic_passwords.txt
 
-# Install MYSQL
+# Install MYSQL + psql tunner
 #RUN apt-key adv --keyserver pgp.mit.edu --recv-keys 5072E1F5 && echo "deb #http://repo.mysql.com/apt/debian/ wheezy mysql-5.5" > /etc/apt/sources.list.d/mysql.list && #apt-get update -qy && apt-get install -qy mysql-server && apt-get autoclean && apt-get clean #&& rm -rf /var/lib/apt/lists/* && rm -fr /var/lib/mysql/*
 
 # Expose mysql port & declare volumen
