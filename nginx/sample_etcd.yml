@@ -46,25 +46,36 @@ nginx:
     upstreams:
         direct:
             server-@sample:
-                one: '{"address":"localhost","options":""}'
-                two: '{"address":"localhost2","options":""}'
+                one: '{"address":"127.0.0.1:8080","options":""}'
+                two: '{"address":"127.0.0.1:8081","options":""}'
             server-@sample2:
-                one: '{"address":"localhost3","options":""}'
-                two: '{"address":"localhost4","options":""}'
+                one: '{"address":"127.0.0.1:8082","options":""}'
+                two: '{"address":"127.0.0.1:8083","options":""}'
             error: pepo
             
         indirect:
             key-@sample3: '/eupstream'
+            error: joto
     sites:
         site-example:
-            domain: localhost
+            domain: '_'
             listen: 80
             root: '/opt/nginx/sites/sample'
             extra_options: ''
-            location-all:
-                route: '/'
-                body: |- 
-                    try_files $uri $uri/index.html $uri.html =404;
+            locations:
+                root:
+                    route: '/'
+                    body: |- 
+                        try_files $uri $uri/index.html $uri.html =404;
+                php:
+                    route: '~ \.php$'
+                    body: |-
+                        fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+                        fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+                        fastcgi_index index.php;
+                        include fastcgi_params;
+                        fastcgi_pass unix:/var/run/php5-fpm.sock;
+
 eupstream:
-    one: '{"address":"localhost","options":""}'
-    two: '{"address":"localhost2","options":""}'
+    one: '{"address":"127.0.0.1:8080","options":""}'
+    two: '{"address":"127.0.0.1:8081","options":""}'

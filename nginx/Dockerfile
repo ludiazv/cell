@@ -18,7 +18,7 @@ RUN echo "deb http://nginx.org/packages/debian/ wheezy nginx" | tee -a /etc/apt/
 COPY php-fpm.conf /etc/php5/fpm/php-fpm.conf
 COPY www.conf /etc/php5/fpm/pool.d/www.conf
 RUN chmod u=rw,g=r,o=r /etc/php5/fpm/php-fpm.conf /etc/php5/fpm/pool.d/www.conf && \
-	sed -i "s/^;cgi\.fix_pathinfo=1/cgi\.fix_pathinfo=0/" /etc/php5/fpm/php.ini
+	sed -i "s/^;cgi\.fix_pathinfo=1/cgi\.fix_pathinfo=0/" /etc/php5/fpm/php.ini && mkdir -p /opt/nginx/sites
 
 VOLUME ["/var/cache/nginx"]
 
@@ -36,7 +36,8 @@ RUN chmod 755 /opt/nginx_entry.sh && mkdir -p /opt/nginx /opt/nginx/sites && cho
 
 # Testing
 RUN mkdir -p /opt/nginx/sites/sample
-COPY index.html /opt/nginx/sites/sample/index.html
+RUN echo "<h1> Sample page </h1> A sample page"  > /opt/nginx/sites/sample/index.html
+RUN echo "<?php phpinfo(); ?>" > /opt/nginx/sites/sample/index.php
 
 
 

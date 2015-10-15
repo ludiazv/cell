@@ -5,7 +5,8 @@ uid = 0
 gid = 0
 mode = "0644"
 keys = [
+  "/",
   "/nginx"
 ]
 check_cmd = "/usr/sbin/nginx -t -c {{ .src }}"
-reload_cmd = "echo reload"
+reload_cmd = "[ -f /opt/nginx.pid ] && kill -HUP $( cat /opt/nginx.pid )"
