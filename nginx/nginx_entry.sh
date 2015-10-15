@@ -43,6 +43,7 @@ fi
 
 confd -onetime -backend etcd -node http://172.17.8.101:2379 -prefix /nginx_test/
 cat /etc/nginx/nginx.conf
+
 exit 0
 #/opt/cell_entry.sh 
 #while $DO_LOOP; do

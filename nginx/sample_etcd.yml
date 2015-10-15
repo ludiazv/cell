@@ -18,9 +18,9 @@ nginx:
                               '$status $body_bytes_sent "$http_referer" '
                               '"$http_user_agent" "$http_x_forwarded_for"';
             access_log off;
-            error_log	/var/log/nginx/error.log crit;
+            error_log   /var/log/nginx/error.log crit;
             # Keep Alive, timeouts
-            send_timeout 	20;
+            send_timeout    20;
             keepalive_timeout 15s;
             reset_timedout_connection on;
             client_body_timeout 25;
@@ -42,20 +42,20 @@ nginx:
             open_file_cache_valid 30s;
             open_file_cache_min_uses 2;
             open_file_cache_errors on;
-  
+            
     upstreams:
-      direct:
-          server-@sample:
-              one: '{"address":"localhost","options":""}'
-              two: '{"address":"localhost2","options":""}'
-          server-@sample2:
-              one: '{"address":"localhost3","options":""}'
-              two: '{"address":"localhost4","options":""}'
-      indirect:
-          key-@sample3: '/eupstream'      
-    
+        direct:
+            server-@sample:
+                one: '{"address":"localhost","options":""}'
+                two: '{"address":"localhost2","options":""}'
+            server-@sample2:
+                one: '{"address":"localhost3","options":""}'
+                two: '{"address":"localhost4","options":""}'
+            error: pepo
+            
+        indirect:
+            key-@sample3: '/eupstream'
     sites:
-
         site-example:
             domain: localhost
             listen: 80
@@ -67,8 +67,4 @@ nginx:
                     try_files $uri $uri/index.html $uri.html =404;
 eupstream:
     one: '{"address":"localhost","options":""}'
-    two: '{"address":"localhost2","options":""}'    
-            
-                
-            
-        
+    two: '{"address":"localhost2","options":""}'
