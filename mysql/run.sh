@@ -1,6 +1,11 @@
 #!/bin/sh
 source /etc/environment
-PREFIX="/"
+PREFIX="/mysql_test/"
+
+cd ../etcd-yaml/
+./run.sh --yes -p $PREFIX --recursive delete
+cat ../mysql/sample_etcd.yml | ./run.sh --yes -p $PREFIX -k /opt/keys/public.gpg import
+cd ../mysql/
 
 sudo mkdir -p /opt/mysql-data
 id -u mysql &> /dev/null
@@ -20,9 +25,10 @@ if [ ! -f /opt/mysql-data/mysql_cell_init.txt ] ; then
 		 	--entrypoint='/opt/mysql_init.sh' \
 		 	-v /opt/mysql-data:/opt/mysql-data \
 		 	-v /opt/keyring:/opt/keyring \
+            -v $(realpath ../etcd-yaml):/opt/keys \
 		 	-e CELL_ETCD_NODE="http://${COREOS_PRIVATE_IPV4}:2379" \
 		 	-e CELL_MYSQL_CONFIG="${PREFIX}mysql/credentials" \
-			atlo/mysql
+            -e CELL_SECRET_FILE="/opt/keys/secret.gpg" atlo/mysql
 else
 	docker run -i --rm -t -p ${COREOS_PRIVATE_IPV4}:3306:3306 --name mysql \
 		 -e HOST_IP=${COREOS_PRIVATE_IPV4} -e CELL_ETCD_PREFIX=${PREFIX} \

@@ -7,6 +7,8 @@ USER root
 RUN apt-get update -yq && apt-get install gnupg2 -yq && apt-get autoclean && apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
+VOLUME ["/opt/keys"]
+
 USER cell
 RUN /bin/bash -l -c "source ~/.rvm/scripts/rvm && gem install etcd net-ssh net-ssh-gateway --no-ri --no-rdoc"
 

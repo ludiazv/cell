@@ -12,18 +12,21 @@ fi
 echo "MySQL DB Setup......"
 echo "===================="
 
+# Set secret file if not provided
+[ -z "$CELL_SECRET_FILE" ] && CELL_SECRET_FILE="/opt/keyring/.secret.gpg"
+
 # Get config from configfile
 if [ -n "$CELL_MYSQL_CONFIG" ] ; then
-	echo "Fetching congiguration from ETCD ${CELL_ETCD_NODE} -> $CELL_MYSQL_CONFIG"
+	echo "Fetching congiguration from ETCD ${CELL_ETCD_NODE} -> $CELL_MYSQL_CONFIG using ${CELL_SECRETFILE} as key"
 	t=$(etcdctl --endpoint="$CELL_ETCD_NODE" --no-sync get ${CELL_MYSQL_CONFIG}/db)
 	[ $? -eq 0 ] && CELL_DB=$t
 	t=$(etcdctl --endpoint="$CELL_ETCD_NODE" --no-sync get ${CELL_MYSQL_CONFIG}/db-user)
 	[ $? -eq 0 ] && CELL_USER=$t
-	t=$(crypt get -endpoint="$CELL_ETCD_NODE" -secret-keyring="/opt/keyring/.secret.gpg" ${CELL_MYSQL_CONFIG}/db-user-pwd)
+	t=$(crypt get -endpoint="$CELL_ETCD_NODE" -secret-keyring="${CELL_SECRET_FILE}" ${CELL_MYSQL_CONFIG}/db-user-pwd)
 	[ $? -eq 0 ] && CELL_PWD=$t
-	t=$(crypt get -endpoint="$CELL_ETCD_NODE" -secret-keyring="/opt/keyring/.secret.gpg" ${CELL_MYSQL_CONFIG}/db-root-pwd)
+	t=$(crypt get -endpoint="$CELL_ETCD_NODE" -secret-keyring="${CELL_SECRET_FILE}" ${CELL_MYSQL_CONFIG}/db-root-pwd)
 	[ $? -eq 0 ] && CELL_ROOT_PWD=$t
-	t=$(crypt get -endpoint="$CELL_ETCD_NODE" -secret-keyring="/opt/keyring/.secret.gpg" ${CELL_MYSQL_CONFIG}/db-bkup-pwd)
+	t=$(crypt get -endpoint="$CELL_ETCD_NODE" -secret-keyring="${CELL_SECRET_FILE}" ${CELL_MYSQL_CONFIG}/db-bkup-pwd)
 	[ $? -eq 0 ] && CELL_BKUP_PWD=$t
 else
 	echo "Using configuration form ENV Variables..."
@@ -72,10 +75,10 @@ if [ "$i" = 0 ]; then
 	echo >&2 'MySQL init process failed.'
 	exit 1
 fi
-echo "Running MYSQL Tunner..."
-cd /opt
+echo "Running MYSQL Tunner... [PENDING]"
+#cd /opt
 #perl mysqltuner.pl --buffers --dbstat --idxstat --outputfile result_mysqltuner.txt
-/bin/bash
+#cd ..
 
 echo "Executing init SQL..."
 #echo "CELL_DB=$CELL_DB,CELL_USER=$CELL_USER,CELL_ROOT_PWD=$CELL_ROOT_PWD,CELL_BKUP_PWD=$CELL_BKUP_PWD"

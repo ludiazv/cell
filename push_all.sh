@@ -11,4 +11,5 @@ docker push atlo/memcached
 docker push atlo/jre7
 docker push atlo/cassandra20
 docker push atlo/registry
+docker push atlo/nginx
 #docker push atlo/elasticsearch15

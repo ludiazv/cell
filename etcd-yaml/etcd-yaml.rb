@@ -269,13 +269,18 @@ when "export"
 
 when "delete"
 	print "Deleting #{prefix}.."
-	if ask_to_import
-		print "Import ready do you want to continue [Y/n]?"
-		r=$stdin.readline().chomp
-		exit 0 if r.downcase!="y"
-	end
-	puts etcd_client.delete prefix, (recursive_delete) ? {recursive: true} : {}
-	puts "#{prefix} cleaned!"
+  n=etcd_client.get prefix
+	if !n.nil?
+    if ask_to_import
+		  print "Import ready do you want to continue [Y/n]?"
+		  r=$stdin.readline().chomp
+		  exit 0 if r.downcase!="y"
+	  end
+	  etcd_client.delete prefix, (recursive_delete) ? {recursive: true} : {}
+	  puts "#{prefix} cleaned!"
+  else
+    puts " not exisits. nothing done!"
+  end
 
 when "version"
 	puts "0.1"

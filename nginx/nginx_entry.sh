@@ -48,6 +48,6 @@ fi
 
 # Ensuring kill all
 killall php5-fpm
-killall nginx
+killall -QUIT nginx
 
 echo "$(date -uIseconds) $HN $SCRIPT INFO: Nginx 1.6 container has been stopped"

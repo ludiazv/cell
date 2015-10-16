@@ -1,0 +1,7 @@
+wordpress_test:
+    credentials:
+        admin-user: wpadmin
+        etcd_
+    conf:
+    
+    nginx:
