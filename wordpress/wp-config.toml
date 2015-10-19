@@ -1,0 +1,11 @@
+[template]
+src = "wp-config.php.tmpl"
+dest = "/opt/nginx/sites/wordpress/wp-config.php"
+uid = 101
+gid = 102
+mode = "0644"
+keys = [
+  "/wordpress_conf"
+]
+# check_cmd = "" (no check)
+reload_cmd = "exit 0"

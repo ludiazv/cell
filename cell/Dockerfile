@@ -5,7 +5,7 @@ MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 ENV DEBIAN_FRONTEND   noninteractive
 
 # update and install basic tools if needed & create cell user+group
-RUN apt-get update -qy && apt-get install -qy --no-install-recommends procps nano tar bzip2 wget net-tools adduser curl ca-certificates && apt-get autoclean && apt-get clean && rm -rf /var/lib/apt/lists/* && groupadd -g 2015 cell && adduser  --uid 2015 --ingroup cell --shell /bin/bash --gecos "" --disabled-password cell
+RUN apt-get update -qy && apt-get install -qy --no-install-recommends procps nano tar bzip2 wget net-tools adduser curl ca-certificates less && apt-get autoclean && apt-get clean && rm -rf /var/lib/apt/lists/* && groupadd -g 2015 cell && adduser  --uid 2015 --ingroup cell --shell /bin/bash --gecos "" --disabled-password cell
 
 # ADD GOSU+CONFD+crypt binary and create condf directories
 #ADD confd-0.10.0-linux-amd64 /usr/local/bin/confd
@@ -18,16 +18,20 @@ RUN wget -O /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download
 	mv /tmp/etcd-*/etcdctl /usr/local/bin/etcdctl && \
 	rm -rf /tmp/* && \
 	chmod u=rwx,g=rx,o=rx /usr/local/bin/confd /usr/local/bin/crypt /usr/local/bin/gosu /usr/local/bin/etcdctl && mkdir -p /etc/confd/conf.d && mkdir -p /etc/confd/templates
-ADD confd.toml /etc/confd/confd.toml
 
-# wget -O /usr/local/bin/confd https://github.com/kelseyhightower/confd/releases/download/v0.8.0/confd-0.10.0-linux-amd64 && \
-# ADD files
-#RUN mkdir -p /opt/confcell
-#ADD confcell.sh /opt/confcell/confcell.sh 
-ADD cell_entry.sh /opt/cell_entry.sh 
-RUN chmod u=rwx,g=rx,o=r /opt/cell_entry.sh
-#chmod u=rwx,g=rx,o=r /opt/confcell/confcell.sh 
+COPY confd.toml /etc/confd/confd.toml
 
 VOLUME ["/opt/keyring"]
 
 ENTRYPOINT ["/opt/cell_entry.sh"]
+
+# wget -O /usr/local/bin/confd https://github.com/kelseyhightower/confd/releases/download/v0.8.0/confd-0.10.0-linux-amd64 && \
+
+# ADD files
+#RUN mkdir -p /opt/confcell
+#ADD confcell.sh /opt/confcell/confcell.sh 
+COPY cell_*.sh /opt/ 
+RUN chmod u=rwx,g=rx,o=r /opt/cell_*.sh
+#chmod u=rwx,g=rx,o=r /opt/confcell/confcell.sh 
+
+

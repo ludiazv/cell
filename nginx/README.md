@@ -13,7 +13,7 @@ The container must be configured using etcd-confd software. To configure it in a
  - prefix/nginx/conf/worker_connections:Connections per worker.
  - prefix/nginx/conf/events: Nginx configuration for 'events' section.
  - prefix/nginx/conf/index: list of index files.
- - prefix/nginx/httpconf: Nginx configuration for 'http' section.
+ - prefix/nginx/conf/httpconf: Nginx configuration for 'http' section.
 
 ###Defining sites (servers,locations,upstreams)
 Nginx uses two major concepts to manage responses to request: Servers and locations. Upstreams are optional and only are when nginx are used as load balancer. Servers, howerver, are mandatory.

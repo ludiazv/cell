@@ -1,7 +1,21 @@
-wordpress_test:
-    credentials:
-        admin-user: wpadmin
-        etcd_
+
+wordpress_conf:
+    wp-admin: 'wpadmin'
+    wp-admin-email: "sample@example.com"
+    wp-domain: "example.com"
+    wp-title: "atlo/wordpress sample site"
+    etcd_yaml_crypt_wp-admin-pwd: 'wpapwd'
+    mysql-type: static
+    mysql-static-ip: 172.17.8.101
+    mysql-static-port: 3306
+    mysql-static-user: 'cell'
+    mysql-static-db: 'cell'
+    etcd_yaml_crypt_mysql-static-pwd: 'cell'
+nginx:
     conf:
-    
-    nginx:
+        worker_processes: auto
+        worker_connections: 512
+    sites:
+        site-wordpress:
+            domain: '_'
+            listen: 80

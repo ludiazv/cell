@@ -14,7 +14,7 @@ echo "$HN $SCRIPT INFO: Booting cell"
 #	./confcell.sh
 #	cd $CDIR
 #else
-	echo "$(date -uIseconds) $HN $SCRIPT INFO: Skiping confcell.sh as no URL and MAN_ID provided"
+#	echo "$(date -uIseconds) $HN $SCRIPT INFO: Skiping confcell.sh as no URL and MAN_ID provided"
 #fi
 
 # Run confd in background within the container
@@ -50,6 +50,6 @@ else
 	CMDS="$CELL_EXEC_PREFIX $CMD $CELL_EXEC_BACKGROUND"
 fi
 
-echo "$(date -uIseconds) $HN $SCRIPT INFO: Running command [ ${CMDS} ] ..."
-eval $CMDS
+echo "$HN $SCRIPT INFO: Running command [ ${CMDS} ] ..."
+eval "${CMDS}"
 
