@@ -2,7 +2,7 @@
 wordpress_conf:
     wp-admin: 'wpadmin'
     wp-admin-email: "sample@example.com"
-    wp-domain: "example.com"
+    wp-domain: "http://172.17.8.101"
     wp-title: "atlo/wordpress sample site"
     etcd_yaml_crypt_wp-admin-pwd: 'wpapwd'
     mysql-type: static
