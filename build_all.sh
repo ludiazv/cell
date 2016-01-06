@@ -6,6 +6,7 @@ cd registry && ./build.sh; cd ..
 cd memcached && ./build.sh && cd ..
 cd golang14 && ./build.sh ; cd ..
 cd ruby2 && ./build.sh ; cd ..
+cd jruby9k && ./build.sh ; cd ..
 cd etcd-yaml && ./build.sh ; cd ..
 cd jre7 && ./build.sh ; cd ..
 cd rails42 && ./build.sh ; cd ..

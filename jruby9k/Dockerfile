@@ -1,4 +1,4 @@
-# Cell container with RMV and ruby2 + git
+# Cell container with RMV and jruby + git
 FROM atlo/cell
 MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 ENV DEBIAN_FRONTEND   noninteractive
@@ -11,7 +11,7 @@ USER cell
 # add keys and installs RVM 
 RUN gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 && \curl -sSL https://get.rvm.io | bash -s stable
 
-ENV CELL_RUBY_VERSION 2.2.4
+ENV CELL_RUBY_VERSION jruby-9.0.4.0
 
 RUN /bin/bash -l -c "source ~/.rvm/scripts/rvm && rvm requirements && rvm install $CELL_RUBY_VERSION && rvm alias create default $CELL_RUBY_VERSION && gem update --system && echo "gem: --no-document" >> ~/.gemrc && gem install bundler --no-ri --no-rdoc"
 

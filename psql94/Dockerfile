@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND   noninteractive
 
 # Install psql repository from postgres respostity v9.4
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" | tee -a /etc/apt/sources.list.d/psql.sources.list && \
-	wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
+	wget --quiet -O - http://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
 	apt-get update -qy && apt-get install postgresql-9.4 -qy && apt-get autoclean && apt-get clean && \
 	rm -rf /var/lib/apt/lists/* && \
 	mkdir -p /opt/psql-data && chown -R postgres:postgres /opt/psql-data && \

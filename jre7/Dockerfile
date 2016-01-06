@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND   noninteractive
 
 # ADD JRE 
 #ADD jre-7u76-linux-x64.gz /tmp/jre
+# Use last public JAVA SE 7 public update 7u80.
 RUN wget --no-check-certificate -O - --header "Cookie: oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jre-7u80-linux-x64.tar.gz | tar xz -C /opt 
 RUN chown -R root:root /opt/jre1.7.0_80 && ln -s /opt/jre1.7.0_80 /opt/java \
     && update-alternatives --install "/usr/bin/java" "java" "/opt/java/bin/java" 1 \
