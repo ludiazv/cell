@@ -7,5 +7,7 @@ TODO.txt
 /jre7/*.gz
 /jre8/*.gz
 /registry/test-data
+/etcd-yaml/*.etcd
+
 
 
