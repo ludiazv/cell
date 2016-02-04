@@ -4,27 +4,64 @@ require 'fog'
 require 'erubis'
 require 'zlib'
 require 'base64'
+require 'open-uri'
+require 'json'
+require 'tunneler'
 
-if ARGV.length ==0 
-	puts "Bad usage. usage dev_aws.rb list|create|start|stop|destroy|create_admin|destroy_admin|create_volumes|destroy_volumes"
+if ARGV.length < 2 
+	puts "Bad usage. usage dev_aws.rb <template file> <verb>"
+  puts " a YML file with the infraestructure defintion. @see readme"
+  puts " where verb is list|create|start|stop|destroy|create_admin|destroy_admin|create_volumes|destroy_volumes"
+  puts "  list= verify if computing resources exists"
+  puts "  create_admin=     Create admin resources. Admin bastion host and basic security groups"
+  puts "  destroy_admin=    Destroy admin resources."
+  puts "  create_volumes=   Create defined EBS volumes and format them using the bastion host."
+  puts "  destroy_volumes=  Destroy defined EBS Volumes(will fail if they are still attached to host)"
+  puts "  create=           Create infraestructre nodes and and load blancers defined."
+  puts "  destroy=          Destroy all infrastructure nodes and load balances defined."
+  puts "  start=            start all EC2 instances including bastion/admin host."
+  puts "  stop=             stop  all EC2 instances inlcuding bastion/admin host."
+  puts " Guidance: "
+  puts " The normal use of the script will be this:"
+  puts " To create the infra, execute in secuence: create_admin -> create_volumes -> create"
+  puts " To create destroy all the infraestructure: destroy -> destroy_volumes -> destroy_admin"
+  puts " To avoid cost when infra is not in use use start/stop as needed."
+  puts " ......"
+  puts " This is an experimental script use it with care. ;)"
 	exit
 end
 
-# Reding test.yml
-yml =  YAML.load(File.read("test.yml"))
+# Reding the template
+yml =  YAML.load(File.read(ARGV[0]))
 
 # Main parameters
 # Check https://coreos.com/os/docs/latest/booting-on-ec2.html
-region = yml["region"]
+$region = yml["region"]
 
-security_groups= yml["security_groups"]
+security_groups= (yml.key?("security_groups")) ? yml["security_groups"] : []
+admin_security_groups= (yml.key?("admin_security_groups")) ? yml["admin_security_groups"] : []
 admin_server= yml["admin_server"]
 admin_server_name= admin_server["tags"]["Name"]
 lservers = (yml.key?("servers")) ? yml["servers"] : []
 volumes = (yml.key?("volumes")) ? yml["volumes"] : []
-load_balancers = (yml.ke?("load_balancers")) ? yml["load_balancers"] : []
+load_balancers = (yml.key?("load_balancers")) ? yml["load_balancers"] : []
 $user_login= yml["user_name"]
 $key_path= yml["key_file"]
+
+# Loading machine types from coreOs Feed
+puts "Reading https://coreos.com/dist/aws/aws-stable.json ami types..."
+content = open("https://coreos.com/dist/aws/aws-stable.json").read
+ami_types= JSON.parse(content)
+if ami_types.nil? || !ami_types.is_a?(Hash) || !ami_types.key?('release_info') || 
+   !ami_types['release_info'].key?('version') || !ami_types.key?($region)
+   puts "Could not retrieve stable coreos feed fro ami type automation."
+   puts "#{content}"
+   exit 1
+else
+  puts "Using CoreOs version:#{ami_types['release_info']['version']} with for region #{$region}"
+  puts "Automated AMIS in use => #{ami_types[$region]}"
+end
+$amis=ami_types[$region]
 
 # key functions
 def find_security_group(c,sg_name)
@@ -43,6 +80,16 @@ def ssh_server(s,cmd)
 	s.username=$user_login
 	s.private_key_path=$key_path
 	s.ssh(cmd)
+end
+
+def ssh_thru_bastion(bastion_host,internal_host,cmd)
+  # Create SSH tunnel
+  tunnel = Tunneler::SshTunnel.new($user_login, bastion_host, {:keys => [$key_path]})
+  remote = tunnel.remote($user_login, internal_host, {:keys => [$key_path]})
+  response = remote.ssh(cmd)
+  tunnel.terminate  
+  #puts response
+  response
 end
 
 def find_load_balancer(c,lb_name)
@@ -188,6 +235,11 @@ end
 def create_server(c, s_entry,admin_server_name="admin") 
 	se=s_entry.dup
 	name= se['tags']['Name']
+  # Automatic AMI selection
+  if se.key?('image_type') && $amis.key?(se['image_type'])
+    se['image_id']= $amis[se['image_type']]
+  end
+  se.delete 'image_type' if se.key?('image_type')
 	# Process templates and tranform entry
 	case se["user_data_type"]
 	when "file"
@@ -201,10 +253,10 @@ def create_server(c, s_entry,admin_server_name="admin")
 			return
 		else
 			adm_ip = (as.nil?) ? "$private_ipv4" : as.private_ip_address
-			wfiles= se['write_files'].dup
+			wfiles= (se.key?('write_files')) ? se['write_files'].dup : []
 			wfiles.each do |f| 
 				#f['base64']= Base64.encode64(Zlib::Deflate.deflate(File.read(f['file']))).gsub(/\n/, '')
-				f['base64'] = File.read(f['file'])
+				f['base64'] = File.read(f['file']).strip.gsub('\n','').gsub('\r','')
 			end
 			se["user_data"]= template.result({admin_serverip: adm_ip,
 											  metadata: se["user_data_metadata"],
@@ -241,26 +293,31 @@ def create_server(c, s_entry,admin_server_name="admin")
 
 end
 
+if !ENV.key?('AWS_ACCESS_KEY') || !ENV.key?('AWS_SECRET_ACCESS_KEY')
+  puts "Error:AWS keys not defined as env variables. Must set AWS_ACCESS_KEY & AWS_SECRET_ACCESS_KEY"
+  exit 1
+end
 
 com = Fog::Compute.new({provider: "AWS",
 						aws_access_key_id: ENV['AWS_ACCESS_KEY'],
 						aws_secret_access_key: ENV['AWS_SECRET_ACCESS_KEY'],
-						region: region })
+						region: $region })
 
-case ARGV[0] 
+case ARGV[1] 
 when "create_admin"
 	# Assure that security groups exists
-	create_security_group(com,security_groups[0])
-	create_security_group(com,security_groups[1])
-	create_security_group(com,security_groups[2])
+  admin_security_groups.each do |sg|
+	  create_security_group(com,sg)
+  end
 	# Create server.
 	create_server(com,admin_server,admin_server['tags']['Name'])
 	
 when "destroy_admin"
-	destroy_server(com,admin_server_name)
-	destroy_security_group(com,security_groups[2]['name'])
-	destroy_security_group(com,security_groups[1]['name'])
-	destroy_security_group(com,security_groups[0]['name'])
+	destroy_server(com,admin_server_name) # Destroy server first
+  #destroy security groups in reverse order
+  admin_security_groups.reverse.each do |sg|
+	  destroy_security_group(com,sg['name'])
+  end
 
 when "create_volumes"
 	volumes.each do |v|
@@ -272,6 +329,30 @@ when "destroy_volumes"
 	end
 
 when "list"
+  # Print all admin resources
+  puts "Admin Security groups..."
+  admin_security_groups.each do |sg|
+    next unless sg.key?('name')
+    g=find_security_group(com,sg['name'])
+    puts "#{sg['name']} => #{(g.nil?) ? 'not pressent' : g.description}"
+  end
+  puts "Security groups..."
+  security_groups.each do |sg|
+    next unless sg.key?('name')
+    g=find_security_group(com,sg['name'])
+    puts "#{sg['name']} => #{(g.nil?) ? 'not pressent' : g.description}" 
+  end
+  puts "Admin server..."
+  puts "#{admin_server['tags']['Name']} => #{find_server(com,admin_server['tags']['Name']).inspect}"
+  puts "Node servers..."
+  lservers.each do |ser|
+    puts "#{ser['tags']['Name']} => #{find_server(com,ser['tags']['Name']).inspect}"
+  end
+  puts "Volumes..."
+  
+  puts "Load Balancers..."
+  puts "TODO- Not implemented"
+  
 	# Printing 
 	#com.servers.each do |s|
 	#	puts s.inspect
@@ -301,15 +382,35 @@ when "create"
 		create_server(com,sr,admin_server_name)
 	end
 	puts "Attaching volumes..."
+  as= find_server(com,admin_server_name)
+  if as.nil?
+    puts "ERROR: #{admin_server_name} could not be found volumes could not be mounted!"
+    exit 1
+  end 
 	lservers.each do |sr|
 		volumes.each do |vol|
 			v=find_volume(com,vol['tags']['Name'])
 			if !v.nil? && vol['server_id'] == sr['tags']['Name']
-				s= find_server(com,vol['server_id'])
+				s= find_server(com,vol['server_id']) 
 				if !s.nil?
+          if s.id == v.server_id
+            puts "Volume #{vol['tags']['Name']} is already attached to #{sr['tags']['Name']}... nothing done!"
+            next
+          end
+          if v.state == 'in-use'
+            puts "Volume #{vol['tags']['Name']} is already in use to server #{v.server_id} .. nothing done!"
+            next
+          end
 					puts "Attaching volume... #{vol['tags']['Name']} to #{sr['tags']['Name']}"
 					v.device = vol['device']
 					v.server = s
+          if !vol.key?('mount_cmd')
+            puts "Volume has not mount_cmd defined. It can't be mounted."
+            next
+          end
+          puts "Give some time (60s) to the manchine to boot...."; sleep 60
+          puts "Mounting #{vol['tags']['Name']} in #{sr['tags']['Name']}..."
+          puts "result:#{ssh_thru_bastion(as.dns_name,s.private_ip_address,vol['mount_cmd'])}"
 				end
 			end
 		end
@@ -328,7 +429,6 @@ when "destroy"
   puts "Remove load balacers done!"
 	# Destroy all security groups
 	puts "Removing security groups...."
-	security_groups.delete_at(0); security_groups.delete_at(0); security_groups.delete_at(0)
 	security_groups.reverse.each do |sc| 
 		destroy_security_group(com,sc['name'])
 	end
@@ -338,36 +438,33 @@ when "destroy"
 
 when "start"
 	puts "Starting all servers..."
-	#[admin_server_name,*lservers].each do |s_name|
-	#	s=find_server(com,s_name)
-	#	if !s.nil? && s.state != "running" 
-	#		print "Starting s.tags['Name']"
-	#		s.start
-
+	([admin_server]+lservers).each do |ser|
+		s=find_server(com,ser['tags']['Name'])
+	  (puts "Server #{ser['tags']['Name']} not found!"; next) if s.nil? 
+    (puts "Server #{ser['tags']['Name']} is running!"; next) if s.state == "running" || s.state=="pending"
+	  print "Starting #{s.tags['Name']}..."
+    s.start
+		s.wait_for { print "."; ready? } 
+		s.reload
+    name=s.tags['Name']
+		File.write("#{name}.txt", s.dns_name)
+		File.write("#{name}-userdata.yml",s.user_data)
+		puts "State #{s.state}. #{s.dns_name} server created [#{name}.txt] file written"
+		puts "User data writen to [#{name}-userdata.yml]"
+  end
 
 
 when "stop"
 	puts "Stopping all servers..."
-	#lservers.each do |s_name|
-	#
-	#end
+	([admin_server]+lservers).each do |ser|
+    s=find_server(com,ser['tags']['Name'])
+	  (puts "Server #{ser['tags']['Name']} not found!"; next) if s.nil?
+    (puts "Server #{ser['tags']['Name']} is stoped!"; next) if s.state == "stopped" || s.state=="stopping" 
+	  puts "Stoping #{s.tags['Name']}..."
+    s.stop
+  end
 
 else
-	puts "#{ARGV[0]} verb not recognized. nothing done!"
+	puts "#{ARGV[1]} verb not recognized. nothing done!"
 end
 
-#com.servers.each do |s|
-#	puts s.inspect
-#	if s.tags.key?('Name') && srv.include?(s.tags['Name'])
-#			puts "#{ARGV[0]} of #{s.tags['Name']}"
-			#s.start if ARGV[0]=="start"
-			#s.stop if ARGV[0]=="stop"
-			#s.destroy if ARGV[0]=="destroy"
-#	else
-#		if s.tags.key?('Name') 
-#	   		puts "Do nothing with .. #{s.id} [#{s.state}]-> #{s.tags['Name']}"
-#	   	else
-#	   		puts "Do nothing with ... #{s.id} [#{s.state}]"
-#	   	end
-#	end
-#end
