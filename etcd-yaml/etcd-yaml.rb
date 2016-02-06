@@ -7,8 +7,12 @@
 #/ -p , --prefix="prefix" prefix to use within etcd. When importing will be added to all keys, when exporting will be used as root key. (default: /)
 #/ -y , --yes Assume yes for interective questions.
 #/ -r , --recursive use recursive delete.
-#/ -t , --tunnel="" should be in the format ssh://user[:password]@addr[:port] (default: no tunnel)
-#/ For using etcd-yaml-crtyp functions gpg2 and gzip **MUST** be installed on the system.
+#/ -t , --tunnel="ssh-uri" should be in the format ssh://user[:password]@addr[:port] (default: no tunnel)
+#/ -s , --tunnel-key="file" if ssh is autheticated this is the file with ssh identity. If given any provided password is not used. (default: no tunnel)
+#/ Disclaimer:
+#/ 1. For using etcd-yaml-crtyp functions gpg2 and gzip **MUST** be installed on the system.
+#/ 2. If --tunnel option is provided with --tunnel-key identities available in ssh-agent will not be used.
+#/ -----
 
 $stderr.sync = true
 require 'rubygems'
@@ -33,6 +37,7 @@ prefix 			= "/"
 action			= "export"
 ask_to_import 	= true
 tunnel_to		= nil
+tunnel_key  = nil
 recursive_delete= false
 mIO = nil
 
@@ -169,6 +174,7 @@ ARGV.options do |opts|
   opts.on("-k", "--keyfile=val", String)	{ |val| keyfile= val }
   opts.on("-y", "--yes")					{ ask_to_import = false }
   opts.on("-t", "--tunnel=val",String)		{ |val| tunnel_to = val}
+  opts.on("-s", "--tunnel-key=val",String) { |val| tunnel_key = val }
   opts.on("-r", "--recursive")				{ recursive_delete = true }
   opts.on_tail("-h", "--help")         		{ exec "grep ^#/<'#{file}'|cut -c4-" }
   opts.parse!
@@ -197,6 +203,14 @@ if !tunnel_to.nil?
 	tunnel_options={}
 	tunnel_options[:port] = tunnel_uri.port if !tunnel_uri.port.nil?
 	tunnel_options[:password]= tunnel_uri.password if !tunnel_uri.password.nil?
+  unless tunnel_key.nil? 
+    if !File.exists?(tunnel_key)
+      puts "ERROR: Tunnel key #{tunnel_key} do not exists!"
+      exit 1
+    end
+    tunnel_options[:keys]=[tunnel_key]; tunnel_options[:keys_only]=true
+    tunnel_options.delete(:password) if tunnel_options.key?(:password) # ignore password if key file used
+  end
 	$net_gateway = Net::SSH::Gateway.new(tunnel_uri.host,tunnel_uri.user,tunnel_options)
 	$gateway_port = $net_gateway.open(host,port)
 	host="127.0.0.1" # chage to local
