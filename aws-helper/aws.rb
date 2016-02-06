@@ -7,11 +7,14 @@ require 'base64'
 require 'open-uri'
 require 'json'
 require 'tunneler'
+require 'optparse'
 
-if ARGV.length < 2 
-	puts "Bad usage. usage dev_aws.rb <template file> <verb>"
-  puts " a YML file with the infraestructure defintion. @see readme"
-  puts " where verb is list|create|start|stop|destroy|create_admin|destroy_admin|create_volumes|destroy_volumes"
+def usage
+	puts "Bad usage. usage dev_aws.rb [options] <template file> <verb>"
+  puts "  [options]"
+  puts "  -o, --out-dir=<dir> directory to create output files when create or update infraestructure. defatul: current dir"
+  puts " <template> a YML file with the infraestructure defintion. @see readme"
+  puts " where <verb> is list|create|start|stop|destroy|create_admin|destroy_admin|create_volumes|destroy_volumes"
   puts "  list= verify if computing resources exists"
   puts "  create_admin=     Create admin resources. Admin bastion host and basic security groups"
   puts "  destroy_admin=    Destroy admin resources."
@@ -28,6 +31,18 @@ if ARGV.length < 2
   puts " To avoid cost when infra is not in use use start/stop as needed."
   puts " ......"
   puts " This is an experimental script use it with care. ;)"
+end
+
+$out_dir= Dir.pwd
+ARGV.options do |opts|
+  opts.on("-o", "--out-dir=val",String)        { |val| $out_dir= File.expand_path(val)  }
+  opts.on_tail("-h", "--help")         		{ usage; exit 1}
+  opts.parse!
+end
+$out_dir= $out_dir.strip.chomp("/")
+
+if ARGV.length < 2 
+  usage
 	exit
 end
 
@@ -283,8 +298,8 @@ def create_server(c, s_entry,admin_server_name="admin")
 			return
 		end
 		s.reload
-		File.write("#{name}.txt", s.dns_name)
-		File.write("#{name}-userdata.yml",s.user_data)
+		File.write("#{$out_dir}/#{name}.txt", s.dns_name)
+		File.write("#{$out_dir}/#{name}-userdata.yml",s.user_data)
 		puts "State #{s.state}. #{s.dns_name} server created [#{name}.txt] file written"
 		puts "User data writen to [#{name}-userdata.yml]"
 	else
@@ -343,27 +358,33 @@ when "list"
     puts "#{sg['name']} => #{(g.nil?) ? 'not pressent' : g.description}" 
   end
   puts "Admin server..."
-  puts "#{admin_server['tags']['Name']} => #{find_server(com,admin_server['tags']['Name']).inspect}"
+  as=find_server(com,admin_server['tags']['Name'])
+  if !as.nil?
+    puts "#{admin_server['tags']['Name']} => #{as.inspect}"
+		File.write("#{$out_dir}/#{as.tags['Name']}.txt", as.dns_name)
+		puts "State #{as.state}. #{as.dns_name} server created [#{admin_server['tags']['Name']}.txt] file written"
+  end
   puts "Node servers..."
   lservers.each do |ser|
-    puts "#{ser['tags']['Name']} => #{find_server(com,ser['tags']['Name']).inspect}"
+    s=find_server(com,ser['tags']['Name'])
+    if !s.nil?
+      puts "#{ser['tags']['Name']} => #{s.inspect}"
+      File.write("#{$out_dir}/#{s.tags['Name']}.txt", s.dns_name)
+      puts "State #{s.state}. #{s.dns_name} server created [#{s.tags['Name']}.txt] file written"
+    end
   end
   puts "Volumes..."
-  
+  puts "Not implemented."
   puts "Load Balancers..."
   puts "TODO- Not implemented"
   
-	# Printing 
-	#com.servers.each do |s|
-	#	puts s.inspect
-	#end
 
 	#com.security_groups.each do |ss|
 	#	puts ss.inspect
 	#end 
-	com.servers.all({"tag:Name"=>"test-admin"}).each do |s|
-		puts s.inspect
-	end
+	#com.servers.all({"tag:Name"=>"test-admin"}).each do |s|
+	#	puts s.inspect
+	#end
 
 when "create"
 	# Creating security groups
@@ -447,10 +468,10 @@ when "start"
 		s.wait_for { print "."; ready? } 
 		s.reload
     name=s.tags['Name']
-		File.write("#{name}.txt", s.dns_name)
-		File.write("#{name}-userdata.yml",s.user_data)
+		File.write("#{$out_dir}/#{name}.txt", s.dns_name)
+		#File.write("#{$out_dir}/#{name}-userdata.yml",s.user_data)
 		puts "State #{s.state}. #{s.dns_name} server created [#{name}.txt] file written"
-		puts "User data writen to [#{name}-userdata.yml]"
+		#puts "User data writen to [#{name}-userdata.yml]"
   end
 
 
