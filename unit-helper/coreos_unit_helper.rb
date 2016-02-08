@@ -1,17 +1,19 @@
 require 'yaml'
 require 'erubis'
+require 'digest'
 
 module CoreosUnitHelper
 
-  def self.set_fleet(cmd,working_dir)
+  def self.set_fleet(cmd,working_dir,opt)
     @@fleet_cmd=cmd
     @@fleet_wd=working_dir
+    @@fleet_op=opt
   end
   
   def self.dump_service(h)
     s=""
     h.each_pair do |section,options|
-      s<< "[#{section}]\n"
+      s << "[#{section}]\n"
       if options.is_a?(Hash)
         options.each_pair do |k,op|
           if op.is_a?(Array)
@@ -22,13 +24,14 @@ module CoreosUnitHelper
         end
       end
     end
-    s
+    return s, Digest::SHA256.hexdigest(s)
   end
   
-  def self.exe_fleet(cmd)
+  def self.exe_fleet(cmd,verbose=false)
     pwd=Dir.pwd
     Dir.chdir @@fleet_wd
-    result=%x(#{@@fleet_cmd} #{cmd})
+    result=%x(#{@@fleet_cmd} #{@@fleet_op} #{cmd})
+    puts result if verbose
     return $?.to_i, result
   ensure
     Dir.chdir pwd
@@ -51,6 +54,7 @@ module CoreosUnitHelper
        lines=result.split(/\n+/)
        if lines.length > 1
          names=lines.first.split(/\t\s*/)
+         #names.map(&upcase)
          lines.delete_at 0
          lines.each do |l|
            row=l.split(/\t\s*/)
@@ -70,16 +74,27 @@ module CoreosUnitHelper
   end
   
   def self.unit_files
-    list_cmd "list-unit-files --full --fields=desc,dstate,global,hash,state,target,unit"
+    units_files=list_cmd "list-unit-files --full --fields=desc,dstate,global,hash,state,target,unit"
+    unit_files.each do |uf|
+      uf['CONTENT'],uf['SHA']= cat(uf['UNIT']) if uf.key?('UNIT')
+    end
   end
   
-  def self.submit(unit_name_file,cont)
+  def self.units
+    units= list_cmd "list-units --full --fields=unit,machine,active,sub"
+    units.each do |unit|
+      unit['CONTENT'],unit['SHA']= cat(unit['UNIT']) if unit.key?('UNIT')
+    end
+    units
+  end
+  
+  def self.submit(unit_name_file,cont,delete_tmp=true)
     File.write(unit_name_file, cont)
     full_path=File.expand_path unit_name_file
     code,result=exe_fleet "submit #{full_path}"
     code == 0
   ensure
-    File.delete unit_name_file if File.exists?(unit_name_file)
+    File.delete unit_name_file if File.exists?(unit_name_file) && delete_tmp
   end
   
   def self.stop(unit)
@@ -101,9 +116,14 @@ module CoreosUnitHelper
   end
   
   def self.start(unit,n=0)
-    #code,result=exe_fleet "load --block-attempts=#{n} #{unit}"
-    #code == 0
-    true
+    code,result=exe_fleet "start --block-attempts=#{n} #{unit}"
+    code == 0
+  end
+  
+  def self.cat(unit)
+    code,result=exe_fleet "cat #{unit}"
+    return nil,nil if code != 0
+    return result, Digest::SHA256.hexdigest(result)
   end
   
 end
