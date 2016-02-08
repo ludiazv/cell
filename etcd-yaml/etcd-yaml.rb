@@ -247,7 +247,7 @@ when "import"
 		end
 		if ask_to_import
 			print "Import ready do you want to continue [Y/n]?"
-			r=$stdin.readline()
+			r=$stdin.readline().chomp
 			exit 0 if r.downcase!="y"
 		end
 		key_id=nil
