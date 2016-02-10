@@ -52,6 +52,7 @@ yml =  YAML.load(File.read(ARGV[0]))
 # Main parameters
 # Check https://coreos.com/os/docs/latest/booting-on-ec2.html
 $region = yml["region"]
+$zone= yml["a_zone"]
 
 security_groups= (yml.key?("security_groups")) ? yml["security_groups"] : []
 admin_security_groups= (yml.key?("admin_security_groups")) ? yml["admin_security_groups"] : []
@@ -79,6 +80,16 @@ end
 $amis=ami_types[$region]
 
 # key functions
+def dump_subnet(c,zone=$zone)
+  
+  c.subnets.all({'availability-zone'=> zone}).each_with_index do |subnet,i|
+    puts "Subnet id:#{subnet.subnet_id} on VPC:#{subnet.vpc_id} with CIRD:#{subnet.cidr_block} free addresses:#{subnet.available_ip_address_count}"
+    File.write("#{$out_dir}/#{zone}-cidr-#{i}.txt",subnet.cidr_block)
+    puts "File #{$out_dir}/#{zone}-cidr-#{i}.txt with subnet range #{subnet.cidr_block} created!"
+  end
+
+end
+
 def find_security_group(c,sg_name)
 	c.security_groups.get(sg_name)
 end
@@ -377,7 +388,8 @@ when "list"
   puts "Not implemented."
   puts "Load Balancers..."
   puts "TODO- Not implemented"
-  
+  puts "Query region[#{$region}/#{$zone}] subnet.."
+  dump_subnet(com)
 
 	#com.security_groups.each do |ss|
 	#	puts ss.inspect
