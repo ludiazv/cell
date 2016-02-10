@@ -54,7 +54,7 @@ module CoreosUnitHelper
        lines=result.split(/\n+/)
        if lines.length > 1
          names=lines.first.split(/\t\s*/)
-         #names.map(&upcase)
+         names.map(&:upcase)
          lines.delete_at 0
          lines.each do |l|
            row=l.split(/\t\s*/)
@@ -74,10 +74,11 @@ module CoreosUnitHelper
   end
   
   def self.unit_files
-    units_files=list_cmd "list-unit-files --full --fields=desc,dstate,global,hash,state,target,unit"
-    unit_files.each do |uf|
+    unit_fil=list_cmd "list-unit-files --full --fields=desc,dstate,global,hash,state,target,unit"
+    unit_fil.each do |uf|
       uf['CONTENT'],uf['SHA']= cat(uf['UNIT']) if uf.key?('UNIT')
     end
+    unit_fil
   end
   
   def self.units
