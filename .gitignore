@@ -9,5 +9,6 @@ TODO.txt
 /registry/test-data
 /etcd-yaml/*.etcd
 /vagrant/.vagrant
+/vagrant/user-data-*
 
 
