@@ -8,6 +8,6 @@ TODO.txt
 /jre8/*.gz
 /registry/test-data
 /etcd-yaml/*.etcd
-
+/vagrant/.vagrant
 
 
