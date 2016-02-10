@@ -17,11 +17,11 @@ ExecStartPre=/bin/bash -c 'mkdir -p /opt/mysql-data ; \
 						  id -u mysql &> /dev/null ; \
 						  if [ $? -eq 1 ] ; then \
 						  	docker kill mysql-usr; docker rm mysql-usr ; \
-							gid=$(docker run -t --rm --name mysql-usr --entrypoint="/opt/mysql_gid.sh" atlo/mysql) ; \
-							echo "gid:$gid" ;\
-							/bin/bash -c "groupadd -g 2016 mysql" ; \
-							uid=$(docker run -t --rm --name mysql-usr --entrypoint="/opt/mysql_uid.sh" atlo/mysql) ; \
-							useradd -r -u 2016 -g mysql mysql; \
+							MGID=$(docker run -t --rm --name mysql-usr --entrypoint="/opt/mysql_gid.sh" atlo/mysql) ; \
+							MUID=$(docker run -t --rm --name mysql-usr --entrypoint="/opt/mysql_uid.sh" atlo/mysql) ; \
+                            echo "Creating mysql account on host $MUID/$MGID" ; \
+                            groupadd -g $MGID mysql ; \
+							useradd -r -u $MUID -g mysql mysql ; \
 						  fi ; \
 						  chown -R mysql:mysql /opt/mysql-data ; \
 						  echo "User & group and mysq-data ready ..."'

@@ -8,14 +8,17 @@ cat ../mysql/sample_etcd.yml | ./run.sh --yes -p $PREFIX -k /opt/keys/public.gpg
 cd ../mysql/
 
 sudo mkdir -p /opt/mysql-data
+sudo mkdir -p /opt/mysql-backup
 id -u mysql &> /dev/null
 if [ $? -eq 1 ] ; then
-	new group_cmd=$(docker run -it --rm --name mysql-usr --entrypoint='/opt/mysql_addgroup.sh' atlo/mysql)
-	new_user_cmd=$(docker run -it --rm --name mysql-usr --entrypoint='/opt/mysql_adduser.sh' atlo/mysql)
-	sudo groupadd -g 2016 mysql
-	sudo useradd -r -u 2016 -g mysql mysql
+	MGID=$(docker run -t --rm --name mysql-usr --entrypoint='/opt/mysql_gid.sh' atlo/mysql)
+	MUID=$(docker run -t --rm --name mysql-usr --entrypoint='/opt/mysql_uid.sh' atlo/mysql)
+	echo "Creating mysql account on host $MUID/$MGID"
+    sudo groupadd -g $MGID mysql
+	sudo useradd -r -u $MUID -g mysql mysql
 fi
 sudo chown -R mysql:mysql /opt/mysql-data
+sudo chown -R mysql:mysql /opt/mysql-backup
 
 if [ ! -f /opt/mysql-data/mysql_cell_init.txt ] ; then
     sudo rm -fr /opt/mysql-data
