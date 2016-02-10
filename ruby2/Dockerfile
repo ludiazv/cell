@@ -3,7 +3,7 @@ FROM atlo/cell
 MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 ENV DEBIAN_FRONTEND   noninteractive
 
-# Do an update for packages
+# Do an update for packages let temporarly sudo for building installing
 RUN apt-get update -yq && apt-get install git sudo -yq && apt-get autoclean && apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* && echo "cell  ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers
 
@@ -21,3 +21,5 @@ RUN chmod u=rxw,g=rx,o=rx /opt/ruby_entry.sh
 VOLUME ["/opt/ruby_run"]
 
 ENTRYPOINT ["/opt/ruby_entry.sh"]
+
+# TODO- Remove from sudoers cell user for security reasons

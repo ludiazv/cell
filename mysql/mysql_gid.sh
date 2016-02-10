@@ -1,2 +1,2 @@
 #!/bin/bash
-id -r -g mysql
+printf $(id -r -g mysql)
