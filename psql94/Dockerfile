@@ -25,18 +25,14 @@ ADD pg_hba.conf /etc/confd/templates/pg_hba.conf.tmpl
 
 # ENV
 ENV PGDATA /opt/psql-data
-
 # Expose the PostgreSQL port
 EXPOSE 5432
+ENTRYPOINT ["/opt/psql_entry.sh"]
 
 # Entrypoint
-ADD psql_entry.sh 	/opt/psql_entry.sh
-ADD psql_init.sh  	/opt/psql_init.sh
-ADD psql_backup.sh  /opt/psql_backup.sh
-ADD postgres_uid.sh /opt/postgres_uid.sh
-ADD postgres_gid.sh /opt/postgres_gid.sh
-ADD psql_safe_stop.sh /opt/psql_safe_stop.sh
+ADD psql_*.sh /opt/
+RUN chmod u=xrw,g=rx,o=rx /opt/psql_*.sh
 
 
-ENTRYPOINT ["/opt/psql_entry.sh"]
+
 

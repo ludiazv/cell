@@ -1,0 +1,15 @@
+psql:
+    conf:
+        max_connections: 100
+        shared_buffers:	'100MB'
+        work_mem:	'16MB'
+        maintenance_work_mem:  '32MB'        
+        hba:
+            rule-1: '{"db":"cell","user":"cell","address":"172.17.8.0/24"}'
+            rule-2: '{"db":"postgres","user":"cell","address":"192.168.1.33/32"}'
+
+    credentials:
+        db: "cell"
+        db-user: "cell"
+        etcd_yaml_crypt_db-user-pwd: cell_pwd
+

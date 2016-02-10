@@ -1,2 +1,2 @@
 #!/bin/bash
-id -g postgres
+printf $(id -r -g postgres)

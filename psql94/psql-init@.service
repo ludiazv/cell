@@ -1,0 +1,44 @@
+[Unit]
+Description=PSQL 9.4 initilizer - instance %i
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=400s
+#KillMode=none
+Type=simple
+RemainAfterExit=true
+EnvironmentFile=/etc/environment
+Environment=PREFIX=/psql_test/
+ExecStartPre=-/usr/bin/docker stop psql94-init
+ExecStartPre=-/usr/bin/docker rm psql94-init
+ExecStartPre=-/usr/bin/docker pull atlo/psql94
+ExecStartPre=/bin/bash -c ' mkdir -p /opt/psql-data ; \
+                            mkdir -p /opt/psql-backup ; \
+                            id -u postgres &> /dev/null ; \
+                            if [ $? -eq 1 ] ; then \
+	                            MGID=$(docker run -t --rm --name psql-usr --entrypoint="/opt/psql_gid.sh" atlo/psql94) ; \
+	                            MUID=$(docker run -t --rm --name psql-usr --entrypoint="/opt/psql_uid.sh" atlo/psql94) ; \
+                                echo "Creating postgres account on host $MUID/$MGID" ; \
+	                            groupadd -g $MGID postgres ; \
+	                            useradd -r -u $MUID -g postgres postgres ; \
+                            fi ; \
+                            chown -R postgres:postgres /opt/psql-data ; \
+                            chown -R postgres:postgres /opt/psql-backup ; \
+                            echo "User & group and psql-data ready on host ..."'
+
+ExecStart=/bin/bash -c 'if [ ! -f /opt/psql-data/CELL_PG_INIT.txt ] ; then \
+                        	docker run --rm --name psql94-init \
+                        		 	--entrypoint="/opt/psql_init.sh" \
+                        		 	-v /opt/psql-data:/opt/psql-data \
+                        		 	-v /opt/keyring:/opt/keyring \
+                        		 	-e CELL_ETCD_NODE="http://${COREOS_PRIVATE_IPV4}:2379" \
+                        		 	-e CELL_PSQL_CONFIG="${PREFIX}psql/credentials" \
+                                    atlo/psql94 \
+		 				else \
+		 				 	echo "PSQL data store already initialized. Nothing done!" ; \
+		 				fi'
+						 
+[X-Fleet]
+Conflicts=psql94-init@*.service
+MachineMetadata=db=true
