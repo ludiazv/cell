@@ -3,7 +3,7 @@
 #/ import: yml -> ectd | export: etcd -> export  | delete: delete prefix (default: export)
 #/ -f , --file="filename" input/output file (default: stdin/stdout will be used)
 #/ -C , --endpoint="etcdendpoint" etcd endpoint (default: http://127.0.0.1:2397 )
-#/ -k , --keyfile="filename" key file use when encrypting/decrypting keys. import requires a public key.
+#/ -k , --keyfile="filename" key file use when encrypting/decrypting keys. import requires a public key. Decrypting not support yet
 #/ -p , --prefix="prefix" prefix to use within etcd. When importing will be added to all keys, when exporting will be used as root key. (default: /)
 #/ -y , --yes Assume yes for interective questions.
 #/ -r , --recursive use recursive delete.
@@ -234,6 +234,7 @@ when "import"
 	if data.key?('etcd_yaml_include') && data['etcd_yaml_include'].is_a?(Array)
 		data['etcd_yaml_include'].each do |f|
 			data=add_yml_to_hash(data,YAML::load(File.read(f))) if File.exists?(f)
+      #puts "f->#{f} #{File.exists?(f)} data -> #{data.inspect}"
 		end
 		data.delete('etcd_yaml_include')
 	end
