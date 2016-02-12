@@ -10,20 +10,30 @@ module CoreosUnitHelper
     @@fleet_op=opt
   end
   
+  # strip bash \CR multiline commands
+  def self.normalize_service_attribute(s)
+    if s.is_a?(String)
+      s.strip.gsub(/\\\s*\n/,'')
+    else
+      s
+    end
+    
+  end
   def self.dump_service(h)
     s=""
     h.each_pair do |section,options|
-      s << "[#{section}]\n"
+      s << "\n[#{section}]\n"
       if options.is_a?(Hash)
         options.each_pair do |k,op|
           if op.is_a?(Array)
-            op.each { |e| s << "#{k}=#{e}\n"}
+            op.each { |e| s << "#{k}=#{normalize_service_attribute e}\n"}
           else
-            s << "#{k}=#{op}\n"
+            s << "#{k}=#{normalize_service_attribute op}\n"
           end
         end
       end
     end
+    s=s[1..-1] if s.length > 0  # remove frist \n to match with fleetd processed units
     return s, Digest::SHA256.hexdigest(s)
   end
   
@@ -37,9 +47,9 @@ module CoreosUnitHelper
     Dir.chdir pwd
   end
 
-  def self.load_service_from_template(unit_name,file,env,paramst={})
+  def self.load_service_from_template(unit_name,base_name,file,env,paramst={})
     template=Erubis::Eruby.new(File.read(file))
-    yml_raw=template.result({unit_name: unit_name, environment: env, params:paramst})
+    yml_raw=template.result({unit_name: unit_name, base_name: base_name, environment: env, params:paramst})
     services_infile=YAML.load(yml_raw)
     (services_infile.is_a?(Hash) && services_infile.key?(unit_name)) ? services_infile[unit_name] : nil
   rescue =>e
