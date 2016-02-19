@@ -1,0 +1,121 @@
+# YMAL structure.
+#   <environment>:
+#       unit_definition:  [array with the definiton of the units]
+#           unit_name: <name of the unit>   [mandatory] must exists as first level entry in file.
+#           base_name: base name used for defining coupled services like sidekicks,inits, etc... [optionl] default: unit_name
+#           file: template yml.erb  where the unit is defined. [mandatory]
+#           suffix: service sufix [.serivice, .timer, .mount , etcc...] (defaul:.service)
+#           multi: true/false if the unit a single unit -> unit_name.service or a unit that can have
+#                   multiple instances unit_name@%i.service (default: false if missing)
+#           params: Hash with additional parameters pased to the template(default: empty hash if not given)
+#       units: [array with the instances of the unit definitions]
+#           unit_name: <nanme of the unit> must be equal to one of the defined in unit_definition_section [mandatory]
+#           use: Number of instances to create (this parameter is ignored if multi=false) [mandatory]
+#       fleet_cmd: cmd for fleet (default: fleetctl) [optional] -> default: fleetctl
+#       fleet_workingdir: directory to set as working directory before calling fleet_cdm [optional] -> default: pwd
+#       ectd_yaml_cmd: Command for executing etcd_yaml.rb script [mandatory]
+#       etcd_yaml_public_key: path to the public key used by etcd_yaml.rb [optional]
+#       etcd_yaml_private_key: reserved for future use [optional]
+#       etcd_prefix: prefix used for ETCD ymal [mandatory]
+#       etcd: Array with keys and values to be loaded in etcd under the prefix defined
+#
+
+---
+# YML entities to reuse
+redis: &redis_service
+    unit_name: "redis"
+    file: redis_units.yml.erb
+    base_name: "redis"
+    multi: true
+    params:
+        prefix: 'MC'
+        docker_image: 'atlo/redis28'
+
+redis-sk: &redis_service_sk
+    unit_name: 'redis-sk'
+    file: redis_units.yml.erb
+    base_name: 'redis'
+    multi: true
+    params:
+        prefix: 'MC'
+        docker_image: 'atlo/redis28'
+        sidekick_ttl: 60
+
+psql-data: &psql_data_mount
+    unit_name: "psql94-data-mount"
+    file: psql_units.yml.erb
+    base_name: 'psql94'
+    multi: true
+
+psql-init: &psql_init
+    unit_name: "psql94-init"
+    file: psql_units.yml.erb
+    base_name: 'psql94'
+    multi: true
+    params:
+        prefix: 'MC'
+        docker_image: 'atlo/psql94'
+psql: &psql
+    unit_name: "psql94"
+    file: psql_units.yml.erb
+    base_name: 'psql94'
+    multi: true
+    params:
+        prefix: 'MC'
+        docker_image: 'atlo/psql94'
+
+psql-sk: &psql_sk
+   unit_name: "psql94-sk"
+   file: psql_units.yml.erb
+   base_name: 'psql94'
+   multi: true
+   params:
+       prefix: 'MC'
+       docker_image: 'atlo/psql94'
+       sidekick_ttl: 60
+
+
+development: &development_mani
+    unit_definition:
+        - *redis_service
+        - *redis_service_sk
+        - *psql_data_mount
+        - *psql_init
+        - *psql
+        - *psql_sk
+    units:
+        - unit_name: "redis"
+          use: 1
+        - unit_name: "redis-sk"
+          use: 1
+        - unit_name: "psql94-data-mount"
+          use: 1
+        - unit_name: "psql94-init"
+          use: 1
+        - unit_name: "psql94"
+          use: 1
+        - unit_name: "psql94-sk"
+          use: 1
+
+    fleet_cmd: development_fleetctl.sh
+    fleet_workingdir: ..
+
+test:
+    <<: *development_mani
+    fleet_cmd: ./fleetctl-darwin
+    etcd_yaml_cmd: ./etcd-yaml.rb
+    etcd_yaml_public_key: ../keys/public-test.gpg
+    etcd_yaml_private_key: ../keys/secret-test.gpg
+    etcd_prefix: '/MC/test'
+    etcd:
+        - redis:
+            conf:
+                tcp-backlog: 512
+                timeout: 0
+                tcp-keepalive: 0
+                databases: 3
+                loglevel: notice
+                maxclients: 1000
+                maxmemory: 	200mb
+                maxmemory-policy: volatile-lru
+                lua-time-limit:	5000
