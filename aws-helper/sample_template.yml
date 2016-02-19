@@ -1,0 +1,251 @@
+# Template for defining infrastructure in AWS using fog
+#
+# General parameters
+# region: &dregion    "valid AWS region" [Mandatory]
+# a_zone: &dzone      "valid availability zone within the region" [Mandatory]
+
+# key_pair: &key      "name of the keypair created in AWS" [Mandatory]
+# key_file: "relative or absolute key_file(.pem), must be the file associated to key name" [Mandatory]
+# user_name: "User name to use to connect to the servers" [optional default:'core']
+#
+# Defining files to be included in server creation. This files will be included in
+# cloud-config file so be aware that it is expected not to be big files:
+# file_id: &yml_entity_name
+#   path: "full path within the server of the file to be included" [Mandatory]
+#   owner: "user:group in the server, user:groups must exitis" [Mandatory]
+#   permissions: "### octal representation of file permissions on the server unix-like" [Mandatory]
+#   encoding: "valid encoding type"  @see https://coreos.com/os/docs/latest/cloud-config.html [Mandatory]
+#   file: "local path to file to be added, must be encoded according econding value" [Mandatory]
+#
+#   Defining servers: All servers are created equal by providing detailed definition of the server
+#   server_id:
+#     key_name: "name of the AWS key pair" [Mandatory]
+#     image_id: "id of AMI to use in the server" [Optional if image_type provided Mandatory if not]
+#     image_type: "pv | hvm" [Optional if image_id provided mandatory if not]
+#       -> ami_id will be obtained by the coreos feed ami-dfb699b5 https://coreos.com/dist/aws/aws-stable.json for the region ingnoring the manual set.
+#     virtualization_type: "pv | hvm" [Mandatory]
+#     flavor_id: "valid AWS EC2 type (eg. t2.micro, m3.large, etc...)" [Mandatory]
+#     availability_zone: "valid availability_zone in region"  [Mandatory] Recomended: *dzone
+#     block_device_mapping:  Array<Hash> with volumes created with the server [Mandatory]
+#       Example:
+#        - DeviceName : '/dev/xvda'  # path to device in the server
+#          Ebs.VolumeSize: 8         # Volume size in GB -> minimal value 8GB
+#          Ebs.VolumeType: 'gp2'     # Type: 'standard' -> magnetic 'gp2' -> EBS-SSD
+#          Ebs.DeleteOnTermination: 'true' # true/false delete volume when server is destroyed
+#       All configurations provided (ephemeral, ipos, ecrypted, etc..) by AWS api are supported
+#     root_device_name: 'path to root device' [Mandatory]
+#     root_device_type: 'ebs' [Mandatory]
+#     groups: Array<String> with the name of security grops that will be associated with the server
+#     
+#      swap_size: # passed to tempate options [Optional]
+#
+#     write_fules: Array<Files> with then information of file to writ
+
+
+#  Admin-Bastion server. By desing this script uses a bastion/admin server to
+#  orchestrate and isolate the infrastructure. It must a
+
+
+---
+
+# Configuration data all are mandatory.
+region:    &dregion     "us-east-1"
+a_zone:    &dzone 	    "us-east-1a"
+ami_id:    &ami 	    "ami-dfb699b5"  # This is HVM that is t2 instances.
+
+ami_type:  &ami_type    "hvm"
+key_pair:  &key 	    "mc_testing"
+
+# User infor loging
+key_file:  "../../keys/mc_testing.pem"
+user_name: "core"
+
+# Key ring files
+public_keyring: &keyring_public
+    path: "/opt/keyring/.public.gpg"
+    owner: "root:root"
+    permissions: "0400"
+    encoding: "gzip+base64"
+    file: "../../keys/public-test.gzip.base64"
+
+private_keyring: &keyring_private
+    path: "/opt/keyring/.secret.gpg"
+    owner: "root:root"
+    permissions: "0400"
+    encoding: "gzip+base64"
+    file: "../../keys/secret-test.gzip.base64"
+
+# Server defautls
+default_server: &default_srv
+    key_name: mc_testing
+    image_id: *ami
+    image_type: *ami_type
+    flavor_id: t2.micro
+    virtualization_type: hvm
+    availability_zone: *dzone
+    user_data: null
+    block_device_mapping:
+        - DeviceName : '/dev/xvda'
+          Ebs.VolumeSize: 8
+          Ebs.VolumeType: 'gp2'  # standard for magnetic
+          Ebs.DeleteOnTermination: 'true'
+    root_device_name: '/dev/xvda'
+    root_device_type: 'ebs'
+    swap_size: 672
+    groups:
+      - "test-mc-coreos"
+    write_files:
+        - *keyring_public
+        - *keyring_private
+
+# Admin server
+admin_server:
+    <<: *default_srv
+    tags:
+        Role: Admin
+        Name: test-mc-admin
+    block_device_mapping:
+        - DeviceName: '/dev/xvda'
+          Ebs.VolumeSize: 10
+          Ebs.VolumeType: 'standard'  # standard for magnetic
+          Ebs.DeleteOnTermination: 'true'
+    user_data: cloud_config_admin.yml.erb
+    user_data_type: template
+    swap_size: 0
+    groups:
+      - "test-mc-coreos"
+      - "public-mc-ssh"
+      - "docker-mc-registry"
+
+# Normal servers
+node_server: &node_srv
+    <<: *default_srv
+    user_data: cloud_config_node.yml.erb
+    user_data_type: template
+
+servers:
+    - <<: *node_srv
+      tags:
+          Role: "Web,Redis"
+          Name: test-mc-webfront
+      user_data_metadata: "env=test,redis=true,webfront=true"
+      groups:
+          - "test-mc-coreos"
+          - "test-mc-web"
+          - "test-mc-redis"
+
+    - <<: *node_srv
+      tags:
+          Role: "App"
+          Name: test-mc-api
+      user_data_metadata: "env=test,api=true"
+      groups:
+          - "test-mc-coreos"
+          - "test-mc-app"
+
+    - <<: *node_srv
+      tags:
+          Role: "App"
+          Name: test-mc-worker
+      user_data_metadata: "env=test,fuel=true,grinder=true"
+      groups:
+          - "test-mc-coreos"
+
+    - <<: *node_srv
+      tags:
+          Role: "DB"
+          Name: test-mc-db
+      user_data_metadata: "env=test,db=true"
+      groups:
+          - "test-mc-coreos"
+          - "test-mc-psql"
+
+
+# Storage Volumes
+default_volume: &def_vlm
+    size: 3
+    device: '/dev/xvdf'
+    format_cmd: 'while [ ! -e /dev/xvdf ]; do  sleep 5; done; sudo /usr/sbin/wipefs -f /dev/xvdf && sudo /usr/sbin/mkfs.ext4 /dev/xvdf'
+    mount_cmd: |
+        sudo mkdir -p /media/data && \
+        sudo bash -c 'printf "[Unit]\n Description=Mount EBS\n[Mount]\n What=/dev/xvdf\n Where=/media/data\n [Install]\n WantedBy = multi-user.target\n" > /etc/systemd/system/media-data.mount' && sudo systemctl enable media-data.mount && sudo systemctl start media-data.mount
+
+    type: gp2
+    availability_zone: *dzone
+    encrypted: false
+    delete_on_termination: false
+
+volumes:
+    - <<: *def_vlm
+      server_id: test-mc-db
+      size: 10
+      tags:
+          Name: 'test-mc-vdb'
+
+# Security Groups
+admin_security_groups:
+# Public SSH access
+  - name: "public-mc-ssh"
+    description: "Enable ssh port 22 for everyone"
+    rules:
+        - port_range: 22..22 # ssh
+          protocol: "tcp"
+          org_type: "ip"
+          org_data: "0.0.0.0/0"
+# ETCD ports
+  - name: "test-mc-coreos"
+    description: "MC Test: Enable ssh & etcd ports for other members of the cluster"
+    rules:
+        - port_range: 2379..2380	# ETCD2
+          protocol: "tcp"
+          org_type: "group"
+          org_data: "test-mc-coreos"
+        - port_range: 22..22 # SSH
+          protocol: "tcp"
+          org_type: "group"
+          org_data: "test-mc-coreos"
+  - name: "docker-mc-registry"
+    description: "Enable port 5000 for internal docker registry"
+    rules:
+        - port_range: 5000..5000 # 5000 internal docker regisry
+          protocol: "tcp"
+          org_type: "group"
+          org_data: "test-mc-coreos"
+
+security_groups:
+# Web front-end
+  - name: "test-mc-web"
+    description: "DOMUS Test: Enable http&https ports for everyone internet"
+    rules:
+        - port_range: 80..80 # http
+          protocol: "tcp"
+          org_type: "ip"
+          org_data: "0.0.0.0/0"
+        - port_range: 443..443 # https
+          protocol: "tcp"
+          org_type: "ip"
+          org_data: "0.0.0.0/0"
+# rails app
+  - name: "test-mc-app"
+    description: "DOMUS Test: Enable app ports 3000-3003 for everyone in cluster"
+    rules:
+        - port_range: 3000..3003 # app server 4 ports
+          protocol: "tcp"
+          org_type: "group"
+          org_data: "test-mc-coreos" # "test-domus-web" for more security
+# redis server
+  - name: "test-mc-redis"
+    description: "DOMUS Test: Enable redis port 6379"
+    rules:
+        - port_range: 6379..6379 # http
+          protocol: "tcp"
+          org_type: "group"
+          org_data: "test-mc-coreos" # "test-domus-app" & web for more security
+# PSQL server
+  - name: "test-mc-psql"
+    description: "DOMUS Test: Enable Postgres port 5432 for cluster"
+    rules:
+        - port_range: 5432..5432  # std psql port
+          protocol: "tcp"
+          org_type: "group"
+          org_data: "test-mc-coreos" # "test-domus-app" for more security
