@@ -2,6 +2,7 @@
 $num_instances=3
 
 coreos_cell_dir=File.dirname(File.expand_path('..', __FILE__))
+parent_dir=File.dirname(File.expand_path('../..', __FILE__))
 meta_data=["redis=true,nginx=true","db=true","app=true"]
 key_files={'/opt/keyring/.secret.gpg' => "#{coreos_cell_dir}/etcd-yaml/secret.gzip.base64",
            '/opt/keyring/.public.gpg' => "#{coreos_cell_dir}/etcd-yaml/public.gzip.base64"}
@@ -18,29 +19,29 @@ if File.exists?('user-data.yml') && ARGV[0].eql?('up')
 
   token = open($new_discovery_url).read
 
-  data = YAML.load(IO.readlines('user-data.yml')[1..-1].join)
-
-  if data.key? 'coreos' and data['coreos'].key? 'etcd'
-    data['coreos']['etcd']['discovery'] = token
-  end
-
-  if data.key? 'coreos' and data['coreos'].key? 'etcd2'
-    data['coreos']['etcd2']['discovery'] = token
-  end
-
-  # Fix for YAML.load() converting reboot-strategy from 'off' to `false`
-  if data.key? 'coreos' and data['coreos'].key? 'update' and data['coreos']['update'].key? 'reboot-strategy'
-    if data['coreos']['update']['reboot-strategy'] == false
-      data['coreos']['update']['reboot-strategy'] = 'off'
-    end
-  end
-
   (1..$num_instances).each do |i|
+    data = YAML.load(IO.readlines('user-data.yml')[1..-1].join)
+
+    if data.key? 'coreos' and data['coreos'].key? 'etcd'
+      data['coreos']['etcd']['discovery'] = token
+    end
+
+    if data.key? 'coreos' and data['coreos'].key? 'etcd2'
+      data['coreos']['etcd2']['discovery'] = token
+    end
+
+    # Fix for YAML.load() converting reboot-strategy from 'off' to `false`
+    if data.key? 'coreos' and data['coreos'].key? 'update' and data['coreos']['update'].key? 'reboot-strategy'
+      if data['coreos']['update']['reboot-strategy'] == false
+        data['coreos']['update']['reboot-strategy'] = 'off'
+      end
+    end
+
     # add metadata
     if data.key? 'coreos' and data['coreos'].key? 'fleet' and data['coreos']['fleet'].is_a?(Hash)
       data['coreos']['fleet']['metadata']= "#{meta_data[i-1]}"
     end
-    
+
     key_files.each_pair do |file,src|
       data['write_files']=[] unless data.key? 'write_files'
       content=IO.read(src)
@@ -54,6 +55,7 @@ if File.exists?('user-data.yml') && ARGV[0].eql?('up')
     yaml = YAML.dump(data)
     File.open("user-data-#{i}", 'w') { |file| file.write("#cloud-config\n\n#{yaml}") }
   end
+  
 end
 
 #
@@ -107,7 +109,8 @@ $vm_cpus = 1
 # or, to map host folders to guest folders of the same name,
 # $shared_folders = Hash[*['/home/foo/app1', '/home/foo/app2'].map{|d| [d, d]}.flatten]
 
-$shared_folders = { coreos_cell_dir => '/home/core/coreos_cell' }
+#$shared_folders = { coreos_cell_dir => '/home/core/coreos_cell' }
+$shared_folders = { parent_dir => '/home/core/projects' }
 
 # Enable port forwarding from guest(s) to host machine, syntax is: { 80 => 8080 }, auto correction is enabled by default.
 #$forwarded_ports = {}
