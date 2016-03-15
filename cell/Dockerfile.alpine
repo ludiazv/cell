@@ -1,0 +1,9 @@
+# Cell: Is a base image programatic containters.
+# alpine + minimal tools + confd tool for coreos etcd auto-config
+FROM alpine:3.3
+MAINTAINER Luis Diaz <ldiaz@atloideas.com>
+
+
+# update and install basic tools if needed & create cell user+group
+RUN apk add --update procps nano tar bzip2 wget net-tools curl ca-certificates && rm -rf /var/cache/apk/*
+ 		# groupadd -g 2015 cell && adduser  --uid 2015 --ingroup cell --shell /bin/bash --gecos "" --disabled-password cell
