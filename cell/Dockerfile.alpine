@@ -5,5 +5,21 @@ MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 
 
 # update and install basic tools if needed & create cell user+group
-RUN apk add --update procps nano tar bzip2 wget net-tools curl ca-certificates && rm -rf /var/cache/apk/*
- 		# groupadd -g 2015 cell && adduser  --uid 2015 --ingroup cell --shell /bin/bash --gecos "" --disabled-password cell
+RUN apk add --update bash procps nano tar wget net-tools curl ca-certificates && rm -rf /var/cache/apk/* && \
+		addgroup -g 2015 cell && adduser -u 2015 -G cell -D -s /bin/bash cell
+
+# ADD GOSU+CONFD+crypt binary and create condf directories
+RUN wget -O /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/1.7/gosu-amd64 && \
+		wget -O /usr/local/bin/crypt https://github.com/xordataexchange/crypt/releases/download/v0.0.1/crypt-0.0.1-linux-amd64 && \
+		wget -O /usr/local/bin/confd https://github.com/kelseyhightower/confd/releases/download/v0.11.0/confd-0.11.0-linux-amd64 && \
+		wget -O- https://github.com/coreos/etcd/releases/download/v2.2.5/etcd-v2.2.5-linux-amd64.tar.gz | tar zxf - -C /tmp && \
+		mv /tmp/etcd-*/etcdctl /usr/local/bin/etcdctl && \
+		rm -rf /tmp/* && \
+		chmod u=rwx,g=rx,o=rx /usr/local/bin/confd /usr/local/bin/crypt /usr/local/bin/gosu /usr/local/bin/etcdctl && \
+		mkdir -p /etc/confd/conf.d && mkdir -p /etc/confd/templates
+
+COPY confd.toml /etc/confd/confd.toml
+VOLUME ["/opt/keyring"]
+ENTRYPOINT ["/opt/cell_entry.sh"]
+COPY cell_*.sh /opt/
+RUN chmod u=rwx,g=rx,o=r /opt/cell_*.sh

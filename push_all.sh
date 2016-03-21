@@ -1,6 +1,7 @@
 #!/bin/sh
 docker login
 docker push atlo/cell
+docker push atlo/cell-alpine
 docker push atlo/redis28
 docker push atlo/psql94
 docker push atlo/ruby2
