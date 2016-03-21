@@ -53,7 +53,7 @@ function crypt_get_abs {
 		echo "$v"
 	else
 		echo "$2"
-	fi	
+	fi
 	return 0
 }
 
@@ -62,4 +62,26 @@ function crypt_get {
 	return
 }
 
-
+# Simple locker service in ETCD
+# @params $1 -> loker name , $2-> wait time
+function set_locker {
+	local wait_t=$2
+	if [ $wait_t -lt 4 ]; then $wait_t=4 fi
+	local n= expr $wait_t / 4
+	for i in {1..$n}
+	do
+		etcdctl -C $CELL_ETCD_NODE set --swap-with-value 'locked' ${CELL_ETCD_PREFIX}$1 'free' &> /dev/null
+		if [ $? -eq 0 ]; then
+			return 0
+		else
+			sleep 4
+		fi
+	done
+	return 1;
+}
+# Release locker
+# $1 -> locker name
+function release_locker {
+	etcdctl -C $CELL_ETCD_NODE set --swap-with-value 'free' ${CELL_ETCD_PREFIX}$1 'locked' &> /dev/null
+	return $?
+}
