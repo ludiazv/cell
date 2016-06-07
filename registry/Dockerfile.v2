@@ -1,0 +1,8 @@
+# Container for basic local storage docker registry
+FROM registry:2
+MAINTAINER Luis Diaz <ldiaz@atloideas.com>
+
+RUN mkdir -p /opt/registry-data
+ADD registry_confv2.yml /etc/docker/registry/config.yml
+
+VOLUME ["/opt/registry-data"]
