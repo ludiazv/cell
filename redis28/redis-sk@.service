@@ -1,10 +1,8 @@
 [Unit]
 Description=Redis 2.8 Service SideKick - instance %i
 # Requirements
-Requires=etcd.service
 Requires=redis@%i.service
 #Order & binding
-After=etcd.service
 After=redis@%i.service
 BindsTo=redis@%i.service
 

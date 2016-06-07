@@ -1,0 +1,12 @@
+
+redis:
+  conf:
+    tcp-backlog: 512
+    timeout: 0
+    tcp-keepalive: 0
+    databases: 5
+    loglevel: notice
+    maxclients: 5000
+    maxmemory: 150mb
+    maxmemory-policy: volatile-lru
+    lua-time-limit: 5000
