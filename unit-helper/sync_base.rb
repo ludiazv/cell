@@ -5,7 +5,7 @@
 #/ -y , --yes Assume yes for interective questions.
 #/ -t , --tunnel="ssh-uri" should be in the format ssh://user[:password]@addr[:port] (default: no tunnel)
 #/ -s , --tunnel-key="file" if ssh is autheticated this is the file with ssh identity. If given any provided password is not used. (default: no tunnel)
-#/ -f , --clean Perform cleaning of units stop, unload, destroy only
+#/ -f , --clean Perform cleaning of units stop, unload, destroy only. Etcd Load will
 #/ Disclaimer:
 #/ 1. For using etcd-yaml-crtyp functions gpg2 and gzip **MUST** be installed on the system.
 #/ 2. If --tunnel option is provided with --tunnel-key identities available in ssh-agent will not be used.
@@ -128,35 +128,11 @@ puts "Using etcd-yaml command: #{ymal_cmd} with keys[#{ymal_public_key}/#{ymal_p
 # Check gzip and gpg2
 print "External requirements:"
 gs=%x(gpg2 --version); print "GPG2 [present:#{$?==0}] #{gs.lines.first}"
-gs=%x(gzip --version); puts "GZIP [presnet:#{$?==0}] #{gs.lines.first}"
+gs=%x(gzip --version 2>&1); puts "GZIP [present:#{$?==0}] #{gs.lines.first}"
 
 # Step 0 Load definitios
-if !$manifest.key?('unit_definition') || !$manifest['unit_definition'].is_a?(Array) || $manifest['unit_definition'].empty?
-  puts "ERROR: unit_definitions malformed in manifest #{manifest_file}"
-  exit 1
-end
-$unit_definitions={}
-$manifest['unit_definition'].each do |unit_def|
-  unit_def['multi']=false unless unit_def.key?('multi')
-  if !unit_def.key?('unit_name') || !unit_def.key?('file')
-    puts "ERROR: malformed unit => #{unit_def.inspect}"
-    exit 1
-  end
-  unit_def['base_name']=(unit_def.key?('base_name')) ? unit_def['base_name'] : unit['unit_name']
-  print "Loading unit definition #{unit_def['unit_name']}, from #{unit_def['file']} base_name:#{unit_def['base_name']} env:#{$envi}..."
-  params=(unit_def.key?('params') && unit_def['params'].is_a?(Hash)) ? unit_def['params'] : {}
-  service= CoreosUnitHelper::load_service_from_template unit_def['unit_name'],unit_def['base_name'],unit_def['file'],$envi,params
-  if service.nil?
-    puts "ERROR: Service unit definition #{unit_def['unit_name']} not valid/not found in #{unit_def['file']}"
-    exit 1
-  end
-  unit_def['suffix']= "service" unless unit_def.key?('suffix')
-  unit_def['service'],unit_def['service_sha']= CoreosUnitHelper::dump_service service
-  unit_def['unit_file_name']= (unit_def['multi']) ? "#{$envi}-#{unit_def['unit_name']}@" : "#{$envi}-#{unit_def['unit_name']}"
-  unit_def['unit_file_name']+=".#{unit_def['suffix']}"
-  $unit_definitions[unit_def['unit_name']] = unit_def
-  puts "#{unit_def['unit_name']}/#{unit_def['unit_file_name']} Digest:#{unit_def['service_sha'][0..5]}..."
-end
+$unit_definitions,err=CoreosUnitHelper::load_unit_definitions $manifest,$envi,true
+exit 1 unless err
 
 # 1 step list machines
 puts "Listing current information for #{$envi}...."
@@ -169,7 +145,6 @@ CoreosUnitHelper::unit_files.each do |uf|
   puts "#{uf['UNIT']}[#{uf['DESC']}] States:#{uf['STATE']}/#{uf['DSTATE']} Global: #{uf['GLOBAL']} Digest:#{uf['SHA'][0..5]}..."
   $present_unit_files[uf['UNIT']]= uf
 end
-
 puts "Units:"
 ($present_units=CoreosUnitHelper::units).each { |u| puts "#{u['UNIT']} States:#{u['ACTIVE']}/#{u['SUB']} machine: #{u['MACHINE']} digest:#{u['SHA'][0..5]}..."}
 puts "-----------------------------------------------------------------------------"
@@ -195,7 +170,7 @@ if !$manifest.key?('units') || !$manifest['units'].is_a?(Array) || $manifest['un
   exit 1
 end
 
-$manifest['units'].each do |unit|
+$manifest['units'].reverse.each do |unit|
 
   if !unit.key?('unit_name') || !unit.key?('use') || unit['use'].to_i <= 0
     puts "ERROR: malformed unit => #{unit.inspect}"
@@ -268,7 +243,7 @@ puts "--------------------------------------------------------------------------
 puts "Submiting unit files..."
 puts "-----------------------------------------------------------------------------"
 $unit_definitions.each_pair do |k,unit_def|
-  puts "Submiting #{unit_def['unit_file_name']} -> #{CoreosUnitHelper::submit unit_def['unit_file_name'],unit_def['service'],false}"
+  puts "Submiting #{unit_def['unit_file_name']} -> #{CoreosUnitHelper::submit unit_def['unit_file_name'],unit_def['service'],true}"
 end
 
 puts "-----------------------------------------------------------------------------"
