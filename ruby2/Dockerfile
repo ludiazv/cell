@@ -13,7 +13,7 @@ RUN gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A170311380
 
 ENV CELL_RUBY_VERSION 2.2.4
 
-RUN /bin/bash -l -c "source ~/.rvm/scripts/rvm && rvm requirements && rvm install $CELL_RUBY_VERSION && \
+RUN /bin/bash -l -c "source ~/.rvm/scripts/rvm && rvm install $CELL_RUBY_VERSION && \
 										 rvm alias create default $CELL_RUBY_VERSION && rvm cleanup all && \
 										 echo 'gem: --no-document' >> ~/.gemrc && \
 										 gem install bundler --no-ri --no-rdoc"
