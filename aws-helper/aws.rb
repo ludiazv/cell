@@ -8,6 +8,7 @@ require 'open-uri'
 require 'json'
 require 'tunneler'
 require 'optparse'
+require 'cloudinit_userdata'
 
 def usage
 	puts "Bad usage. usage dev_aws.rb [options] <template file> <verb>"
@@ -322,6 +323,13 @@ def create_server(c, s_entry,admin_server_name="admin")
 											  write_files: wfiles ,
 												params: (se.key?('user_data_params')) ? se['user_data_params'] : {} })
 			#puts se["user_data"]
+		end
+		# validate user data
+		begin
+			CloudInit::Userdata.parse(se['user_data']).valid?
+		rescue => e
+			puts "ERROR: user data is not valid: #{e}"
+			return
 		end
 	else
 		puts "ERROR: undefined user data management... #{name} not created"
