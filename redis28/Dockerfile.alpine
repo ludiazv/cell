@@ -1,0 +1,22 @@
+# Cell container with redis
+FROM atlo/cell-alpine
+MAINTAINER Luis Diaz <ldiaz@atloideas.com>
+
+
+# Install dotdeb repository where redis 2.8 is located
+RUN apk add --update redis && rm -rf /var/cache/apk/*
+
+# Script vm overcommit and max conections acording to redis 2.8 recommendations and add a volume
+ADD redis_entry.sh /opt/redis_entry.sh
+RUN chmod 755 /opt/redis_entry.sh && mkdir -p /opt/redis_data && chown -R redis:redis /opt/redis_data /var/lib/redis
+VOLUME /opt/redis_data
+
+# CONFD configuration for redis.conf file
+ADD redis.toml /etc/confd/conf.d/redis.toml
+ADD redis.conf /etc/confd/templates/redis.conf.tmpl
+RUN mkdir -p /etc/redis && cp /etc/redis.conf /etc/redis/redis.conf && chown -R redis:redis /etc/redis
+
+# Expose redis port
+EXPOSE 6379
+
+ENTRYPOINT ["/opt/redis_entry.sh"]
