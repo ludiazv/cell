@@ -15,9 +15,6 @@ cd nginx && ./build.sh ; cd ..
 cd redis28 && ./build.sh ; cd ..
 cd psql94  && ./build.sh ; cd ..
 cd cassandra20 && ./build.sh ; cd ..
+cd wordpress && ./build.sh ; cd ..
 
 #cd eleasticsearch15 && ./build.sh ; cd ..
-
-
-
-
