@@ -77,7 +77,7 @@ function set_locker {
 			sleep 4
 		fi
 	done
-	return 1;
+	return 1
 }
 # Release locker
 # $1 -> locker name
