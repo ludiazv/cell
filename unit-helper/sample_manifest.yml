@@ -42,36 +42,36 @@ redis-sk: &redis_service_sk
         sidekick_ttl: 60
 
 psql-data: &psql_data_mount
-    unit_name: "psql94-data-mount"
+    unit_name: "psql-data-mount"
     file: psql_units.yml.erb
-    base_name: 'psql94'
+    base_name: 'psql'
     multi: true
 
 psql-init: &psql_init
-    unit_name: "psql94-init"
+    unit_name: "psql-init"
     file: psql_units.yml.erb
-    base_name: 'psql94'
+    base_name: 'psql'
     multi: true
     params:
         prefix: 'MC'
-        docker_image: 'atlo/psql94'
+        docker_image: 'atlo/psql'
 psql: &psql
-    unit_name: "psql94"
+    unit_name: "psql"
     file: psql_units.yml.erb
-    base_name: 'psql94'
+    base_name: 'psql'
     multi: true
     params:
         prefix: 'MC'
-        docker_image: 'atlo/psql94'
+        docker_image: 'atlo/psql'
 
 psql-sk: &psql_sk
-   unit_name: "psql94-sk"
+   unit_name: "psql-sk"
    file: psql_units.yml.erb
-   base_name: 'psql94'
+   base_name: 'psql'
    multi: true
    params:
        prefix: 'MC'
-       docker_image: 'atlo/psql94'
+       docker_image: 'atlo/psql'
        sidekick_ttl: 60
 
 
@@ -88,13 +88,13 @@ development: &development_mani
           use: 1
         - unit_name: "redis-sk"
           use: 1
-        - unit_name: "psql94-data-mount"
+        - unit_name: "psql-data-mount"
           use: 1
-        - unit_name: "psql94-init"
+        - unit_name: "psql-init"
           use: 1
-        - unit_name: "psql94"
+        - unit_name: "psql"
           use: 1
-        - unit_name: "psql94-sk"
+        - unit_name: "psql-sk"
           use: 1
 
     fleet_cmd: development_fleetctl.sh

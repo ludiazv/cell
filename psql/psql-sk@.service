@@ -1,5 +1,5 @@
 [Unit]
-Description=PostgreSQL 9.4 Service SideKick - instance %i
+Description=PostgreSQL 9.5 Service SideKick - instance %i
 # Requirements
 Requires=psql@%i.service
 #Order & binding
@@ -11,7 +11,7 @@ EnvironmentFile=/etc/environment
 Environment=PREFIX=/psql_test/
 ExecStart=/bin/sh -c 'WAIT=30 ; while true; do \
 				        sleep $WAIT ; \
-						ST=$(docker exec psql94-%i gosu postgres /opt/psqlbin/pg_ctl status) ; \ 
+						ST=$(docker exec psql-%i gosu postgres /opt/psqlbin/pg_ctl status) ; \
 						T=$(date -uIseconds) ; \
 						etcdctl set --ttl 80 ${PREFIX}psql/psql-%i-ip ${COREOS_PRIVATE_IPV4} > /dev/null ; \
 						etcdctl set --ttl 80 ${PREFIX}psql/psql-%i-port 5432 > /dev/null ; \

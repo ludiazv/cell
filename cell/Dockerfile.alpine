@@ -1,6 +1,6 @@
 # Cell: Is a base image programatic containters.
 # alpine + minimal tools + confd tool for coreos etcd auto-config
-FROM alpine:3.3
+FROM alpine:3.4
 MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 
 
@@ -9,10 +9,10 @@ RUN apk add --update bash procps nano tar wget net-tools curl ca-certificates &&
 		addgroup -g 2015 cell && adduser -u 2015 -G cell -D -s /bin/bash cell
 
 # ADD GOSU+CONFD+crypt binary and create condf directories
-RUN wget -O /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/1.7/gosu-amd64 && \
+RUN wget -O /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/1.9/gosu-amd64 && \
 		wget -O /usr/local/bin/crypt https://github.com/xordataexchange/crypt/releases/download/v0.0.1/crypt-0.0.1-linux-amd64 && \
 		wget -O /usr/local/bin/confd https://github.com/kelseyhightower/confd/releases/download/v0.11.0/confd-0.11.0-linux-amd64 && \
-		wget -O- https://github.com/coreos/etcd/releases/download/v2.2.5/etcd-v2.2.5-linux-amd64.tar.gz | tar zxf - -C /tmp && \
+		wget -O- https://github.com/coreos/etcd/releases/download/v2.3.6/etcd-v2.3.6-linux-amd64.tar.gz | tar zxf - -C /tmp && \
 		mv /tmp/etcd-*/etcdctl /usr/local/bin/etcdctl && \
 		rm -rf /tmp/* && \
 		chmod u=rwx,g=rx,o=rx /usr/local/bin/confd /usr/local/bin/crypt /usr/local/bin/gosu /usr/local/bin/etcdctl && \

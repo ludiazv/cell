@@ -11,10 +11,10 @@ RUN apt-get update -qy && apt-get install -qy --no-install-recommends procps psm
 #ADD confd-0.10.0-linux-amd64 /usr/local/bin/confd
 #ADD gosu-amd64-1.2 /usr/local/bin/gosu
 #ADD crypt-0.0.1-linux-amd64 /usr/local/bin/crypt
-RUN wget -O /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/1.7/gosu-amd64 && \
+RUN wget -O /usr/local/bin/gosu https://github.com/tianon/gosu/releases/download/1.9/gosu-amd64 && \
 	wget -O /usr/local/bin/crypt https://github.com/xordataexchange/crypt/releases/download/v0.0.1/crypt-0.0.1-linux-amd64 && \
 	wget -O /usr/local/bin/confd https://github.com/kelseyhightower/confd/releases/download/v0.11.0/confd-0.11.0-linux-amd64 && \
-	wget -O- https://github.com/coreos/etcd/releases/download/v2.2.5/etcd-v2.2.5-linux-amd64.tar.gz | tar zxf - -C /tmp && \
+	wget -O- https://github.com/coreos/etcd/releases/download/v2.3.6/etcd-v2.3.6-linux-amd64.tar.gz | tar zxf - -C /tmp && \
 	mv /tmp/etcd-*/etcdctl /usr/local/bin/etcdctl && \
 	rm -rf /tmp/* && \
 	chmod u=rwx,g=rx,o=rx /usr/local/bin/confd /usr/local/bin/crypt /usr/local/bin/gosu /usr/local/bin/etcdctl && mkdir -p /etc/confd/conf.d && mkdir -p /etc/confd/templates

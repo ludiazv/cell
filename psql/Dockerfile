@@ -1,4 +1,4 @@
-# Cell container postgresql 9.4
+# Cell container postgresql 9.5
 FROM atlo/cell
 MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 ENV DEBIAN_FRONTEND   noninteractive
@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND   noninteractive
 # Install psql repository from postgres respostity v9.4
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" | tee -a /etc/apt/sources.list.d/psql.sources.list && \
 	wget --quiet -O - http://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
-	apt-get update -qy && apt-get install postgresql-9.4 -qy && apt-get autoclean && apt-get clean && \
+	apt-get update -qy && apt-get install postgresql-9.5 -qy && apt-get autoclean && apt-get clean && \
 	rm -rf /var/lib/apt/lists/* && \
 	mkdir -p /opt/psql-data && chown -R postgres:postgres /opt/psql-data && \
 	mkdir -p /opt/psql-backup && chown -R postgres:postgres /opt/psql-backup && \
@@ -32,7 +32,3 @@ ENTRYPOINT ["/opt/psql_entry.sh"]
 # Entrypoint
 ADD psql_*.sh /opt/
 RUN chmod u=xrw,g=rx,o=rx /opt/psql_*.sh
-
-
-
-

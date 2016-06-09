@@ -18,7 +18,7 @@ USER cell
 #										 gem install bundler --no-ri --no-rdoc"
 
 ADD ruby_entry.sh /opt/ruby_entry.sh
-RUN chmod u=rxw,g=rx,o=rx /opt/ruby_entry.sh
+RUN sudo chown cell:cell /opt/ruby_entry.sh && sudo chmod u=rxw,g=rx,o=rx /opt/ruby_entry.sh
 
 VOLUME ["/opt/ruby_run"]
 
