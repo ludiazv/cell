@@ -26,6 +26,7 @@ cd cassandra20 && ./build.sh ; cd ..
 
 # Extras
 cd etcd-yaml && ./build.sh ; cd ..
+cd sass-compiler && ./build.sh ; cd ..
 
 # Applications
 #cd wordpress && ./build.sh ; cd ..

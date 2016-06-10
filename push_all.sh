@@ -29,6 +29,7 @@ docker push atlo/mysql
 
 #Extras
 docker push atlo/etcd-yaml
+docker push atlo/sass-compiler
 
 # Applications
 #docker push atlo/wordpress
