@@ -1,5 +1,5 @@
 #!/bin/bash -l
-source /home/cell/.rvm/scripts/rvm
+[ -f /home/cell/.rvm/scripts/rvm ] && source /home/cell/.rvm/scripts/rvm
 HN=$(hostname)
 SCRIPT=$(basename $0)
 
