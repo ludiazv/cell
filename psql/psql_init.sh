@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 SUP="gosu postgres"
 PG_CTL="$SUP /opt/psqlbin/pg_ctl"
@@ -45,19 +45,25 @@ if [ $? -eq 0 ]; then
 	$PSQL -c "CREATE EXTENSION IF NOT EXISTS plpgsql;"
 	$PSQL -c "CREATE ROLE $CELL_USER NOSUPERUSER CREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$CELL_PWD';"
 	$PSQL -c "ALTER DATABASE $CELL_DB OWNER TO $CELL_USER;"
-	$PSQL -c "grant all privileges on database $CELL_DB to $CELL_USER"
-	$PSQL -c "\l"
-	$PSQL -c "\du"
-	$PG_CTL stop -m fast
+	$PSQL -c "grant all privileges on database $CELL_DB to $CELL_USER ;"
+	#$PSQL -c "\l;"
+	#$PSQL -c "\du;"
+	echo "-----------------------------------------------------"
+	echo "Sleeping for stability..."
 	sleep 5
-    echo "Data container initializaed at $(date -uIseconds) DB=$CELL_DB USER=$CELL_USER" > $PGDATA/CELL_PG_INIT.txt
+	set +e
+	echo "Stoping server in gracefully mode..."
+	$PG_CTL stop -t 10 -m fast
+	[ $? -ne 0 ] && echo "Force shutdown of server ..." && $PG_CTL stop -t 20 -m immediate
+	sleep 5
+  echo "Data container initializaed at $(date -uIseconds) DB=$CELL_DB USER=$CELL_USER" > $PGDATA/CELL_PG_INIT.txt
 	set +e  # avoid error interrupt
-    $PG_CTL status
+  $PG_CTL status
 else
     #report error
-    exit 1 
+    exit 1
 fi
 
 echo "PSQL INITDB on $PGDATA .... finished!"
 echo "------------------------------------------"
-
+exit 0
