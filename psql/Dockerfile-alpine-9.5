@@ -1,8 +1,8 @@
 # Cell container postgresql 9.5
-FROM atlo/cell
+FROM atlo/cell-alpine
 MAINTAINER Luis Diaz <ldiaz@atloideas.com>
 
-ENV PSQL_MAJOR 9.4
+ENV PSQL_MAJOR 9.5
 
 # Install psql repository from postgres respostity v9.4
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" | tee -a /etc/apt/sources.list.d/psql.sources.list && \
